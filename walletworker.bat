@@ -8,10 +8,13 @@ rem Inspired by DeckerSU's dexscripts.win32
 rem @todo do the part for a fresh komodo installation
 rem @todo handle unable to check for updates
 rem @todo validate send to address format is correct
+rem @todo I think need to detect R address vs Z address and possibly use different methods to send (where the balances are coming from might make a difference too)
+rem @todo gracefully shutdown komodo stop (komodo-cli stop [-ac_name=??])
+rem @todo encrypt/decrypt wallet.dat with passphrase (verify/write up some msgs about incompatibility with agama)
 
 :startup
     for /F "tokens=*" %%I in (config.ini) do set %%I
-    title=WalletWorker 0.0.1a - https://webworker.sh
+    title=WalletWorker 0.0.1a - https://webworker.sh/notary
     call:checkdirs
     call:checkupdates
     call:getupdates
@@ -22,6 +25,27 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     echo Shutting down services...
     taskkill /T /IM komodod.exe
     goto end
+
+:help
+    call:menuheader
+    echo [31m^^^^[0mPay attention to the line above the menus indicating which chain you currently have selected[31m^^^^[0m
+    echo.
+    echo Menus are mostly case sensitive, so pay attention to the commands displayed in square brackets []
+    echo.
+    echo This wallet currently depends on downloading the full blockchain for KMD or an assetchain.
+    echo.
+    echo SPV(electrum) is not currently supported, and might never be. Please use Agama wallet if you require this functionality
+    echo.
+    echo When you start komodod for a given chain, you must wait for the blocks that you already had downloaded to be reverified and the block chain started syncing before any of the other commands will function.  You will see lines starting with "UpdateTip" when syncing has started.
+    echo.
+    echo Developed on Win10x64 although Windows 7 *should* be supported
+    echo.
+    pause
+    goto mainmenu
+
+:webworker
+    start "" https://webworker.sh/notary
+    goto mainmenu
 
 :checkdirs
     if not exist "bin" mkdir bin
@@ -59,8 +83,10 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     goto:eof
 
 :menuheader
-    cls
-    echo WalletWorker 0.1a - [32mhttps://webworker.sh[0m
+    rem cls
+    echo.
+    echo.
+    echo WalletWorker 0.1a - [32mhttps://webworker.sh/notary[0m
     echo ----------------------------------------
     echo.
     echo Currently on [[94m[43m%walletlabel%[0m] Chain
@@ -94,14 +120,17 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     echo [[94m2[0m] - List Addresses
     echo [[94m3[0m] - List Transactions (last 10)
     echo [[94m4[0m] - Send Funds
-    echo [[94m5[0m] - New address
-    echo [[94m6[0m] - New Z address
+    echo [[94m5[0m] - New Address
+    echo [[94m6[0m] - New Z Address
+    echo.
+    echo [[32mh[0m] - Help
+    echo [[32mw[0m] - Visit website
     echo.
     echo [[33mx[0m] - Exit WalletWorker
     echo [[31mX[0m] - Exit WalletWorker and stop all services
     echo.
     rem SET /P M=Choose an option and then press [Enter]: 
-    choice /CS /C xXs123vak456 /N /M "Choose an option: "
+    choice /CS /C xXs123vak456hw /N /M "Choose an option: "
     SET choice=%ERRORLEVEL%
     if %choice% equ 1 goto end
     if %choice% equ 2 goto kill
@@ -115,6 +144,8 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     if %choice% equ 10 goto sendtoaddress
     if %choice% equ 11 goto getnewaddress
     if %choice% equ 12 goto zgetnewaddress
+    if %choice% equ 13 goto help
+    if %choice% equ 14 goto webworker
     goto end
 
 :acmenu
@@ -125,6 +156,7 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
         set firstletter=!thisacname:~0,1!
         echo [[32m!thisacid![0m] - !thisacname!
     )
+    echo.
     set /P chosenacid=Choose by [[32mid[0m] then press [Enter]: 
     set foundmatch=
     for /f "tokens=2,3" %%a in ('
@@ -174,7 +206,8 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     goto mainmenu
 
 :listaddresses
-    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listreceivedbyaddress 1 true |more
+    rem bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listreceivedbyaddress 1 true |more
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getaddressesbyaccount "" |more
     bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_listaddresses |more
     pause
     goto mainmenu
@@ -185,7 +218,9 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     goto mainmenu
 
 :sendtoaddress
-    echo warning, no validation yet, so you better be sure to put in correct values
+    echo [31mWarning^^![0m Validation of entries here is tricky and still a work in progress!
+    echo Please check and double check that you are using the values you wish to use^^!
+    echo.
 
     set /P thistoaddress=Enter the address to send to: 
     set /P thisamount=Enter the amount to send: 
@@ -199,9 +234,9 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
         goto mainmenu
     )
 
-    set /P verifiedsend=Are you sure you want to send %thisamount% to %thistoaddress%? [Y/N]
-    if verifiedsend=y (
-        bin\komodo-cli %kmdparamdatadir% %kmdparamacname% sendtoaddress %thistoaddress% %thisamount%
+    set /P verifiedsend=Are you sure you want to send %thisamount% to %thistoaddress%? [Y/N]: 
+    if /I verifiedsend equ "Y" (
+        bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_sendmany "" {%thistoaddress%:%thisamount%}
         pause
     )
 
