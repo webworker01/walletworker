@@ -5,12 +5,13 @@ rem *UNRELATED* https://github.com/firehol/netdata/wiki
 rem WalletWorker 0.0.1a for Komodo
 rem Inspired by DeckerSU's dexscripts.win32
 
-rem load config.ini variables
-for /F "tokens=*" %%I in (config.ini) do set %%I
-
-title=WalletWorker 0.0.1a - https://webworker.sh
+rem @todo do the part for a fresh komodo installation
+rem @todo handle unable to check for updates
+rem @todo validate send to address format is correct
 
 :startup
+    for /F "tokens=*" %%I in (config.ini) do set %%I
+    title=WalletWorker 0.0.1a - https://webworker.sh
     call:checkdirs
     call:checkupdates
     call:getupdates
@@ -31,7 +32,7 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/', 'tmp\newpage.html')"
     if not exist "tmp\newpage.html" (
         echo Error checking for updates, continue with existing version?
-        rem @todo handle updates not found
+        
     )
     if exist "tmp\oldpage.html" (
         set newupdate=1 & fc tmp\newpage.html tmp\oldpage.html>nul && set newupdate=
@@ -62,6 +63,8 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     echo WalletWorker 0.1a - [32mhttps://webworker.sh[0m
     echo ----------------------------------------
     echo.
+    echo Currently on [[94m[43m%walletlabel%[0m] Chain
+    echo.
     goto:eof
 
 :kmdswitch
@@ -79,7 +82,7 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
 :mainmenu
     call:menuheader
 
-    echo [[32ms[0m] - Start komodod.exe [[94m[43m%walletlabel%[0m]
+    echo [[32ms[0m] - Start komodod.exe for [[94m[43m%walletlabel%[0m]
     echo [[32ma[0m] - Asset Chains menu
 
     if defined chosenac (
@@ -87,15 +90,18 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     )
 
     echo.
-    echo [[94m1[0m] - %walletlabel% Get Info (komodod must be started/synced)
-    echo [[94m2[0m] - %walletlabel% List Addresses
-    echo [[94m3[0m] - %walletlabel% List Transactions (last 10)
+    echo [[94m1[0m] - Get Info (komodod must be started/synced)
+    echo [[94m2[0m] - List Addresses
+    echo [[94m3[0m] - List Transactions (last 10)
+    echo [[94m4[0m] - Send Funds
+    echo [[94m5[0m] - New address
+    echo [[94m6[0m] - New Z address
     echo.
     echo [[33mx[0m] - Exit WalletWorker
     echo [[31mX[0m] - Exit WalletWorker and stop all services
     echo.
     rem SET /P M=Choose an option and then press [Enter]: 
-    choice /CS /C xXs123vak /N /M "Choose an option: "
+    choice /CS /C xXs123vak456 /N /M "Choose an option: "
     SET choice=%ERRORLEVEL%
     if %choice% equ 1 goto end
     if %choice% equ 2 goto kill
@@ -106,6 +112,9 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     if %choice% equ 7 goto votemenu
     if %choice% equ 8 goto acmenu
     if %choice% equ 9 goto kmdswitch
+    if %choice% equ 10 goto sendtoaddress
+    if %choice% equ 11 goto getnewaddress
+    if %choice% equ 12 goto zgetnewaddress
     goto end
 
 :acmenu
@@ -166,11 +175,40 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
 
 :listaddresses
     bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listreceivedbyaddress 1 true |more
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_listaddresses |more
     pause
     goto mainmenu
 
 :listtransactions
     bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listtransactions |more
+    pause
+    goto mainmenu
+
+:sendtoaddress
+    echo warning, no validation yet, so you better be sure to put in correct values
+
+    set /P thistoaddress=Enter the address to send to: 
+    set /P thisamount=Enter the amount to send: 
+
+    echo %thisamount%|findstr /xr "[.]*[0-9][.]*[0-9]* 0" >nul && (
+        echo %thisamount% is a valid number
+        echo %thisamount%+0
+    ) || (
+        echo %thisamount% is not a valid amount
+        pause
+        goto mainmenu
+    )
+
+    set /P verifiedsend=Are you sure you want to send %thisamount% to %thistoaddress%? [Y/N]
+    if verifiedsend=y (
+        bin\komodo-cli %kmdparamdatadir% %kmdparamacname% sendtoaddress %thistoaddress% %thisamount%
+        pause
+    )
+
+    goto mainmenu
+
+:zgetnewaddress
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_getnewaddress
     pause
     goto mainmenu
 
