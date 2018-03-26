@@ -2,13 +2,13 @@
 setlocal enabledelayedexpansion
 rem *UNRELATED* https://github.com/firehol/netdata/wiki
 
-rem WalletWorker 0.1a for Komodo
+rem WalletWorker 0.0.1a for Komodo
 rem Inspired by DeckerSU's dexscripts.win32
 
 rem load config.ini variables
 for /F "tokens=*" %%I in (config.ini) do set %%I
 
-title=WalletWorker 0.1a - https://webworker.sh
+title=WalletWorker 0.0.1a - https://webworker.sh
 
 :checkdirs
     if not exist "bin" mkdir bin
@@ -41,7 +41,12 @@ title=WalletWorker 0.1a - https://webworker.sh
     ) else (
         echo No updates, continuing
     )
-    goto mainmenu
+    goto kmdswitch
+
+:end
+    echo Shutting down services...
+    taskkill /T /IM komodod.exe
+    goto end2
 
 :menuheader
     cls
@@ -52,72 +57,46 @@ title=WalletWorker 0.1a - https://webworker.sh
 
 :mainmenu
     call:menuheader
-    echo [[32ms[0m] - Start komodod.exe KMD
+
+    echo [[32ms[0m] - Start komodod.exe [[94m[43m%walletlabel%[0m]
     echo [[32ma[0m] - Asset Chains menu
-    echo [[32mv[0m] - VOTE2018 menu
+
+    if defined chosenac (
+        echo [[32mk[0m] - Switch back to KMD
+    )
+
     echo.
-    echo [[94m1[0m] - KMD Get Info (komodod must be started/synced)
-    echo [[94m2[0m] - KMD List Addresses
-    echo [[94m3[0m] - KMD List Transactions (last 10)
+    echo [[94m1[0m] - %walletlabel% Get Info (komodod must be started/synced)
+    echo [[94m2[0m] - %walletlabel% List Addresses
+    echo [[94m3[0m] - %walletlabel% List Transactions (last 10)
     echo.
     echo [[33mx[0m] - Exit WalletWorker
     echo [[31mX[0m] - Exit WalletWorker and stop all services
     echo.
     rem SET /P M=Choose an option and then press [Enter]: 
-    choice /CS /C xXs123va /N /M "Choose an option: "
+    choice /CS /C xXs123vak /N /M "Choose an option: "
     SET choice=%ERRORLEVEL%
     if %choice% equ 1 goto end2
     if %choice% equ 2 goto end
     if %choice% equ 3 goto startkomodod
-    if %choice% equ 4 goto kmdgetinfo
-    if %choice% equ 5 goto kmdlistaddresses
-    if %choice% equ 6 goto kmdlisttransactions
+    if %choice% equ 4 goto getinfo
+    if %choice% equ 5 goto listaddresses
+    if %choice% equ 6 goto listtransactions
     if %choice% equ 7 goto votemenu
     if %choice% equ 8 goto acmenu
+    if %choice% equ 9 goto kmdswitch
     goto end
 
-:startkomodod
-    if not defined datadir (
-        start "[KMD] komodod.exe" bin\komodod -printtoconsole
-    ) else (
-        start "[KMD] komodod.exe" bin\komodod -printtoconsole -datadir=%datadir%
+:kmdswitch
+    set chosenacid=
+    set chosenac=
+    set chosenacsupply=
+    set walletlabel=KMD
+    set kmdparamacname=
+    set kmdparamacsupply=
+    if defined datadir (
+        set kmdparamdatadir=-datadir=%datadir%
     )
-    echo.
-    echo Starting komodod.exe for [KMD]
-    echo.
-    echo Before running any other commands the blockchain must be syncing
-    echo Check in komodod.exe window for lines starting with "UpdateTip"
-    echo.
-    echo In Get Info check that "blocks" = "longestchain" to verify fully synced
-    echo.
-    pause
-    goto mainmenu
-
-:kmdgetinfo
-    if not defined datadir (
-        bin\komodo-cli getinfo 
-    ) else (
-        bin\komodo-cli -datadir=%datadir% getinfo
-    )
-    pause
-    goto mainmenu
-
-:kmdlistaddresses
-    if not defined datadir (
-        bin\komodo-cli listreceivedbyaddress 1 true |more
-    ) else (
-        bin\komodo-cli -datadir=%datadir% listreceivedbyaddress 1 true |more
-    )
-    pause
-    goto mainmenu
-
-:kmdlisttransactions
-    if not defined datadir (
-        bin\komodo-cli listtransactions |more
-    ) else (
-        bin\komodo-cli -datadir=%datadir% listtransactions |more
-    )
-    pause
     goto mainmenu
 
 :acmenu
@@ -129,89 +108,61 @@ title=WalletWorker 0.1a - https://webworker.sh
         echo [[32m!thisacid![0m] - !thisacname!
     )
     set /P chosenacid=Choose by [[32mid[0m] then press [Enter]: 
-    echo.
-    echo %chosenacid% was chosen
-
-    for /f "tokens=2" %%a in ('
+    set foundmatch=
+    for /f "tokens=2,3" %%a in ('
         findstr /b /r /i /c:"%chosenacid% " "acs.txt"
     ') do (
         set chosenac=%%a
+        set chosenacsupply=%%b
+        set foundmatch=1
     )
 
-    echo %chosenac% was chosen
-
-    pause
-    goto mainmenu
-
-:votemenu
-    call:menuheader
-    echo [s] - Start komodod.exe VOTE2018
-    echo.
-    echo [1] - VOTE2018 Get Info
-    echo [2] - VOTE2018 List Addresses
-    echo [3] - VOTE2018 List Transactions (last 10)
-    echo.
-    echo [x] - Return to Main Menu
-    choice /CS /C xs123 /N /M "Choose an option: "
-    SET choice=%ERRORLEVEL%
-    if %choice% equ 1 goto mainmenu
-    if %choice% equ 2 goto votekomodod
-    if %choice% equ 3 goto votegetinfo
-    if %choice% equ 4 goto votelistaddresses
-    if %choice% equ 5 goto votelisttransactions
-    goto mainmenu
-
-:votekomodod
-    if not defined datadir (
-        start "[VOTE2018] komodod.exe" bin\komodod -printtoconsole -ac_name=VOTE2018 -ac_supply=600000000
+    if defined foundmatch (
+        set walletlabel=%chosenac%
+        set kmdparamacname=-ac_name=%chosenac%
+        set kmdparamacsupply=-ac_supply=%chosenacsupply%
+        if defined datadir (
+            set kmdparamdatadir=-datadir=%datadir%\%chosenac%
+        )
     ) else (
-        start "[VOTE2018] komodod.exe" bin\komodod -printtoconsole -datadir=%datadir%\VOTE2018 -ac_name=VOTE2018 -ac_supply=600000000
+        echo [id] not found
+        pause
     )
+
+    goto mainmenu
+
+:startkomodod
+    start "[%walletlabel%] komodod.exe" bin\komodod -printtoconsole %kmdparamdatadir% %kmdparamacname% %kmdparamacsupply%
+
     echo.
-    echo Starting komodod.exe for [VOTE2018]
+    echo Starting komodod.exe for [%walletlabel%]
     echo.
     echo Before running any other commands the blockchain must be syncing
     echo Check in komodod.exe window for lines starting with "UpdateTip"
     echo.
-    echo In Get Info check that "blocks" = "longestchain" to verify fully synced
+    echo Then in choose Get Info and check that "blocks" = "longestchain" to verify fully synced
     echo.
     pause
-    goto votemenu
+    goto mainmenu
 
-:votegetinfo
-    if not defined datadir (
-        bin\komodo-cli -ac_name=VOTE2018 getinfo
-    ) else (
-        bin\komodo-cli -datadir=%datadir%\VOTE2018 -ac_name=VOTE2018 getinfo
-    )
+:getinfo
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getinfo
     pause
-    goto votemenu
+    goto mainmenu
 
-:votelistaddresses
-    if not defined datadir (
-        bin\komodo-cli -ac_name=VOTE2018 listreceivedbyaddress 1 true |more
-    ) else (
-        bin\komodo-cli -datadir=%datadir%\VOTE2018 -ac_name=VOTE2018 listreceivedbyaddress 1 true |more
-    )
+:listaddresses
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listreceivedbyaddress 1 true |more
     pause
-    goto votemenu
+    goto mainmenu
 
-:votelisttransactions
-    if not defined datadir (
-        bin\komodo-cli -ac_name=VOTE2018 listtransactions |more
-    ) else (
-        bin\komodo-cli -datadir=%datadir%\VOTE2018 -ac_name=VOTE2018 listtransactions |more
-    )
+:listtransactions
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listtransactions |more
     pause
-    goto votemenu
+    goto mainmenu
 
 :error
     echo There was a problem
     goto end2
-
-:end
-    echo Shutting down services...
-    taskkill /T /IM komodod.exe 
 
 :end2
     echo.
