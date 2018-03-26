@@ -12,6 +12,8 @@ rem @todo I think need to detect R address vs Z address and possibly use differe
 rem @todo gracefully shutdown komodo stop (komodo-cli stop [-ac_name=??])
 rem @todo encrypt/decrypt wallet.dat with passphrase (verify/write up some msgs about incompatibility with agama)
 rem @todo backup wallet (to desktop or documents?)
+rem @todo add learning mode
+rem @todo get live list of assetchains
 
 :startup
     for /F "tokens=*" %%I in (config.ini) do set %%I
@@ -48,6 +50,26 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     start "" https://webworker.sh/notary
     goto mainmenu
 
+:strlen <stringVar> <resultVar> (   
+    set "s=!%~1!#"
+    set "len=0"
+    for %%P in (4096 2048 1024 512 256 128 64 32 16 8 4 2 1) do (
+        if "!s:~%%P,1!" NEQ "" ( 
+            set /a "len+=%%P"
+            set "s=!s:~%%P!"
+        )
+    )
+) (
+    set "%~2=%len%"
+)
+
+:trim <stringVar> (
+    set "s=!%~1!"
+    for /f "tokens=* delims= " %%a in ("%s%") do set input=%%a
+    for /l %%a in (1,1,100) do if "!input:~-1!"==" " set input=!input:~0,-1!
+    set "%~1=%input%"
+)
+
 :checkdirs
     if not exist "bin" mkdir bin
     if not exist "tmp" mkdir tmp
@@ -56,8 +78,8 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
 :checkupdates
     powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/', 'tmp\newpage.html')"
     if not exist "tmp\newpage.html" (
-        echo Error checking for updates, continue with existing version?
-        
+        echo Error checking for updates 
+        rem continue with existing version?
     )
     if exist "tmp\oldpage.html" (
         set newupdate=1 & fc tmp\newpage.html tmp\oldpage.html>nul && set newupdate=
@@ -84,7 +106,8 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     goto:eof
 
 :menuheader
-    cls
+    rem cls
+    echo.
     echo.
     echo WalletWorker 0.0.1a - [32mhttps://webworker.sh/notary[0m
     echo ----------------------------------------
@@ -218,27 +241,84 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     goto mainmenu
 
 :sendtoaddress
+    echo.
     echo [31mWarning^^![0m Validation of entries here is tricky and still a work in progress!
     echo Please check and double check that you are using the values you wish to use^^!
     echo.
 
-    set /P thistoaddress=Enter the address to send to: 
-    set /P thisamount=Enter the amount to send: 
+    set /P thisfromaddress=Enter the address with funds you wish to send from: 
 
-    echo %thisamount%|findstr /xr "[.]*[0-9][.]*[0-9]* 0" >nul && (
-        echo %thisamount% is a valid number
-        echo %thisamount%+0
-    ) || (
-        echo %thisamount% is not a valid amount
+    call :trim thisfromaddress
+    call :strlen thisfromaddress thisfromaddresslen
+
+    if %thisfromaddresslen% equ 0 (
+        echo No from address entered.
         pause
         goto mainmenu
     )
 
-    set /P verifiedsend=Are you sure you want to send %thisamount% to %thistoaddress%? [Y/N]: 
-    if /I verifiedsend equ "Y" (
-        bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_sendmany "" {%thistoaddress%:%thisamount%}
+    set thisfromaddressfirstletter=%thisfromaddress:~0,1%
+
+    set thisfromaddressvalid=
+    if /I %thisfromaddressfirstletter% equ R (
+        if %thisfromaddresslen% equ 34 set thisfromaddressvalid=1
+    )
+
+    if /I %thisfromaddressfirstletter% equ Z (
+        if %thisfromaddresslen% equ 95 set thisfromaddressvalid=1
+    )
+
+    if not defined thisfromaddressvalid (
+        echo The send from address %thisfromaddress% you entered is invalid, please double check.
+        pause
+        goto mainmenu
+    )
+
+    set /P thistoaddress=Enter the address to send to: 
+    call :trim thistoaddress
+    call :strlen thistoaddress thistoaddresslen
+    if %thistoaddresslen% equ 0 (
+        echo No to address entered.
+        pause
+        goto mainmenu
+    )
+
+    set thistoaddressfirstletter=%thistoaddress:~0,1%
+
+    set thistoaddressvalid=
+    if /I %thistoaddressfirstletter% equ R (
+        if %thistoaddresslen% equ 34 set thistoaddressvalid=1
+    )
+
+    if /I %thistoaddressfirstletter% equ Z (
+        if %thistoaddresslen% equ 95 set thistoaddressvalid=1
+    )
+
+    if not defined thistoaddressvalid (
+        echo The send to address %thistoaddress% you entered is invalid, please double check.
+        pause
+        goto mainmenu
+    )
+
+    set /P thisamount=Enter the amount to send: 
+    echo %thisamount%|findstr /xr "[.]*[0-9][.]*[0-9]* 0" >nul && (
+        echo.
+    ) || (
+        set thistoaddress=
+        set thistoamount=
+        echo %thisamount% is not a valid amount, please double check.
+        pause
+        goto mainmenu
+    )    
+
+    set /P verifiedsend=Are you sure you want to send %thisamount% %walletlabel% to %thistoaddress%? [Y/N]: 
+    if /I %verifiedsend% equ Y (
+        echo sending...
+        bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_sendmany "%thisfromaddress%" "[{\"address\": \"%thistoaddress%\", \"amount\": %thisamount%}]"
         pause
     )
+    set thistoaddress=
+    set thistoamount=
     goto mainmenu
 
 :zgetnewaddress

@@ -12,7 +12,7 @@ This is a fancy batch file which creates a lightweight wallet interface for Komo
 
 I wanted to create something for the Komodo community that I could bring to a useable state within a short amount of time. I also wanted to demonstrate my ability to work with the Komodo blockchain in an easily auditable way.  
 
-While there are certainly limitations to creating a program with a batch file, I was inspired by [DeckerSU's dexscripts.win32](https://github.com/DeckerSU/SuperNET/blob/dev-decker-dev/iguana/dexscripts.win32/how_to_use.md) for BarterDEX and being a script, anyone with some basic programming knowledge can review exactly what the program is doing without trusting in a compiled binary.   I was also able to complete the initial version in a little under 24 hours of total work which was important for me right in the middle of the notary node elections!
+While there are certainly limitations to creating a program with a batch file, I was inspired by [DeckerSU's dexscripts.win32](https://github.com/DeckerSU/SuperNET/blob/dev-decker-dev/iguana/dexscripts.win32/how_to_use.md) for BarterDEX and being a script, anyone with some basic capability of reading code can review exactly what the program is doing without trusting in a compiled binary and also learn what goes on under the hood of fancy GUI wallets.   I was also able to complete the initial version in a little under 24 hours of total work which was important for me right in the middle of the notary node elections!
 
 ## Features
 
@@ -37,9 +37,10 @@ Any other requirements will come from komodod and komodo-cli, but if all goes we
 
 ## Potential Future Enhancements
 
-I need to make sure everything is solid with the current features before adding on much more, but some thoughts:
+I need to make sure everything is solid with the current features before adding on much more, but some thoughts if there's demand for this program:
 
 * Better formatting of RPC results
+* Learning mode - display all RPC calls to the screen so you can see the commands being used
 * Wallet.dat encryption (This needs to be tested with Agama, but most likely will cause compatibility issues)
 * Possibly some BarterDex integration
 * [Bitcoin](https://bitcoin.org) and other BTC compatibles support
