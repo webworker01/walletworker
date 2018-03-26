@@ -10,20 +10,34 @@ for /F "tokens=*" %%I in (config.ini) do set %%I
 
 title=WalletWorker 0.0.1a - https://webworker.sh
 
+:startup
+    call:checkdirs
+    call:checkupdates
+    call:getupdates
+    goto kmdswitch
+
+REM bat files are finicky this is way up here so it doesn't accidently get run if a section below fails
+:kill
+    echo Shutting down services...
+    taskkill /T /IM komodod.exe
+    goto end
+
 :checkdirs
     if not exist "bin" mkdir bin
     if not exist "tmp" mkdir tmp
+    goto:eof
 
 :checkupdates
     powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/', 'tmp\newpage.html')"
     if not exist "tmp\newpage.html" (
         echo Error checking for updates, continue with existing version?
-        goto end
+        rem @todo handle updates not found
     )
     if exist "tmp\oldpage.html" (
         set newupdate=1 & fc tmp\newpage.html tmp\oldpage.html>nul && set newupdate=
     )
     move /Y tmp\newpage.html tmp\oldpage.html > nul
+    goto:eof
 
 :getupdates
     if defined newupdate (
@@ -41,12 +55,7 @@ title=WalletWorker 0.0.1a - https://webworker.sh
     ) else (
         echo No updates, continuing
     )
-    goto kmdswitch
-
-:end
-    echo Shutting down services...
-    taskkill /T /IM komodod.exe
-    goto end2
+    goto:eof
 
 :menuheader
     cls
@@ -54,6 +63,18 @@ title=WalletWorker 0.0.1a - https://webworker.sh
     echo ----------------------------------------
     echo.
     goto:eof
+
+:kmdswitch
+    set chosenacid=
+    set chosenac=
+    set chosenacsupply=
+    set walletlabel=KMD
+    set kmdparamacname=
+    set kmdparamacsupply=
+    if defined datadir (
+        set kmdparamdatadir=-datadir=%datadir%
+    )
+    goto mainmenu
 
 :mainmenu
     call:menuheader
@@ -76,8 +97,8 @@ title=WalletWorker 0.0.1a - https://webworker.sh
     rem SET /P M=Choose an option and then press [Enter]: 
     choice /CS /C xXs123vak /N /M "Choose an option: "
     SET choice=%ERRORLEVEL%
-    if %choice% equ 1 goto end2
-    if %choice% equ 2 goto end
+    if %choice% equ 1 goto end
+    if %choice% equ 2 goto kill
     if %choice% equ 3 goto startkomodod
     if %choice% equ 4 goto getinfo
     if %choice% equ 5 goto listaddresses
@@ -86,18 +107,6 @@ title=WalletWorker 0.0.1a - https://webworker.sh
     if %choice% equ 8 goto acmenu
     if %choice% equ 9 goto kmdswitch
     goto end
-
-:kmdswitch
-    set chosenacid=
-    set chosenac=
-    set chosenacsupply=
-    set walletlabel=KMD
-    set kmdparamacname=
-    set kmdparamacsupply=
-    if defined datadir (
-        set kmdparamdatadir=-datadir=%datadir%
-    )
-    goto mainmenu
 
 :acmenu
     call:menuheader
@@ -145,6 +154,11 @@ title=WalletWorker 0.0.1a - https://webworker.sh
     pause
     goto mainmenu
 
+:getnewaddress
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getnewaddress
+    pause
+    goto mainmenu
+
 :getinfo
     bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getinfo
     pause
@@ -162,9 +176,9 @@ title=WalletWorker 0.0.1a - https://webworker.sh
 
 :error
     echo There was a problem
-    goto end2
+    goto end
 
-:end2
+:end
     echo.
     echo Good bye!
     endlocal
