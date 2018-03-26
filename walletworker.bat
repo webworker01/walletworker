@@ -50,6 +50,7 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     start "" https://webworker.sh/notary
     goto mainmenu
 
+rem @link https://stackoverflow.com/a/5841587/5016797
 :strlen <stringVar> <resultVar> (   
     set "s=!%~1!#"
     set "len=0"
@@ -63,6 +64,7 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     set "%~2=%len%"
 )
 
+rem @link https://stackoverflow.com/a/3002207/5016797
 :trim <stringVar> (
     set "s=!%~1!"
     for /f "tokens=* delims= " %%a in ("%s%") do set input=%%a
@@ -152,7 +154,6 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     echo [[33mx[0m] - Exit WalletWorker
     echo [[31mX[0m] - Exit WalletWorker and stop all services
     echo.
-    rem SET /P M=Choose an option and then press [Enter]: 
     choice /CS /C xXs123vak456hw /N /M "Choose an option: "
     SET choice=%ERRORLEVEL%
     if %choice% equ 1 goto end
@@ -229,8 +230,8 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     goto mainmenu
 
 :listaddresses
-    rem bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listreceivedbyaddress 1 true |more
-    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getaddressesbyaccount "" |more
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listreceivedbyaddress 1 true |more
+    rem bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getaddressesbyaccount "" |more
     bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_listaddresses |more
     pause
     goto mainmenu
@@ -240,12 +241,7 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     pause
     goto mainmenu
 
-:sendtoaddress
-    echo.
-    echo [31mWarning^^![0m Validation of entries here is tricky and still a work in progress!
-    echo Please check and double check that you are using the values you wish to use^^!
-    echo.
-
+:sendfromaddress
     set /P thisfromaddress=Enter the address with funds you wish to send from: 
 
     call :trim thisfromaddress
@@ -272,6 +268,40 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
         echo The send from address %thisfromaddress% you entered is invalid, please double check.
         pause
         goto mainmenu
+    )
+    goto:eof
+
+:sendtoaddress
+    set thistranstype=1
+    set thistranstrans=
+    set thisprivtrans=
+    set thisfromaddress=
+    set thistoaddress=
+    set thistoamount=
+
+    echo.
+    echo [31mWarning^^![0m Validation of entries here is tricky and still a work in progress!
+    echo Please check and double check that you are using the values you wish to use^^!
+    echo.
+    echo Do you wish to send a [T]ransparent or [P]rivate transaction?
+    choice /C TP /N /M "Choose an option: "
+    SET thistranstype=%ERRORLEVEL%
+    if %thistranstype% equ 1 set thistranstrans=1
+    if %thistranstype% equ 2 set thisprivtrans=1
+
+    if %thistranstype% equ 1 (
+        echo Setting up a Transparent transaction
+        echo Note: This will attempt to use any available funds in your wallet
+        echo.
+    )
+
+    if %thistranstype% equ 2 (
+        echo Setting up a Private transaction
+        echo Note: You will need to specify the address which has funds you wish to use
+        echo At least one of the 2 addresses must be a Z address
+        echo.
+
+        call :sendfromaddress
     )
 
     set /P thistoaddress=Enter the address to send to: 
@@ -304,8 +334,6 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     echo %thisamount%|findstr /xr "[.]*[0-9][.]*[0-9]* 0" >nul && (
         echo.
     ) || (
-        set thistoaddress=
-        set thistoamount=
         echo %thisamount% is not a valid amount, please double check.
         pause
         goto mainmenu
@@ -314,11 +342,16 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     set /P verifiedsend=Are you sure you want to send %thisamount% %walletlabel% to %thistoaddress%? [Y/N]: 
     if /I %verifiedsend% equ Y (
         echo sending...
-        bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_sendmany "%thisfromaddress%" "[{\"address\": \"%thistoaddress%\", \"amount\": %thisamount%}]"
+        if %thistranstype% equ 1 (
+            bin\komodo-cli %kmdparamdatadir% %kmdparamacname% sendtoaddress "%thistoaddress%" %thisamount%
+        )
+
+        if %thistranstype% equ 2 (
+            bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_sendmany "%thisfromaddress%" "[{\"address\": \"%thistoaddress%\", \"amount\": %thisamount%}]"
+            bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_getoperationresult
+        )
         pause
     )
-    set thistoaddress=
-    set thistoamount=
     goto mainmenu
 
 :zgetnewaddress
