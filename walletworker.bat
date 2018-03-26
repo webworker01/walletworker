@@ -11,10 +11,11 @@ rem @todo validate send to address format is correct
 rem @todo I think need to detect R address vs Z address and possibly use different methods to send (where the balances are coming from might make a difference too)
 rem @todo gracefully shutdown komodo stop (komodo-cli stop [-ac_name=??])
 rem @todo encrypt/decrypt wallet.dat with passphrase (verify/write up some msgs about incompatibility with agama)
+rem @todo backup wallet (to desktop or documents?)
 
 :startup
     for /F "tokens=*" %%I in (config.ini) do set %%I
-    title=WalletWorker 0.0.1a - https://webworker.sh/notary
+    title=WalletWorker 0.0.1a for Komodo - https://webworker.sh/notary
     call:checkdirs
     call:checkupdates
     call:getupdates
@@ -83,10 +84,9 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     goto:eof
 
 :menuheader
-    rem cls
+    cls
     echo.
-    echo.
-    echo WalletWorker 0.1a - [32mhttps://webworker.sh/notary[0m
+    echo WalletWorker 0.0.1a - [32mhttps://webworker.sh/notary[0m
     echo ----------------------------------------
     echo.
     echo Currently on [[94m[43m%walletlabel%[0m] Chain
@@ -239,7 +239,6 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
         bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_sendmany "" {%thistoaddress%:%thisamount%}
         pause
     )
-
     goto mainmenu
 
 :zgetnewaddress
