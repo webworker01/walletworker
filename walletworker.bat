@@ -138,9 +138,9 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     if not exist "%configdir%\komodo.conf" (
         copy komodo.conf %configdir%\komodo.conf
         call :genrandom randomone
-        echo rpcuser=user!randomone! >> %configdir%\komodo.conf
+        echo rpcuser=user!randomone!>> %configdir%\komodo.conf
         call :genrandom randomtwo
-        echo rpcpassword=!randomtwo! >> %configdir%\komodo.conf
+        echo rpcpassword=!randomtwo!>> %configdir%\komodo.conf
         pause
     )
 
