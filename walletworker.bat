@@ -154,6 +154,8 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     )
     if exist "tmp\oldpage.html" (
         set newupdate=1 & fc tmp\newpage.html tmp\oldpage.html>nul && set newupdate=
+    ) else (
+        set newupdate=1
     )
     move /Y tmp\newpage.html tmp\oldpage.html > nul
     goto:eof
