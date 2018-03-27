@@ -7,6 +7,7 @@ rem @author webworker01 <https://webworker.sh>
 
 rem Inspired by DeckerSU's dexscripts.win32
 
+rem @todo even better shutdown handling
 rem @todo better options/handling for daemon windows (e.g. option to not show daemon window at all)
 rem @todo get live list of assetchains
 rem @todo collect interest

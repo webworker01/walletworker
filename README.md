@@ -16,7 +16,9 @@ This is a fancy batch file which creates a lightweight wallet interface for Komo
 
 I wanted to create something for the Komodo community that I could bring to a useable state within a short amount of time. I also wanted to demonstrate my ability to work with the Komodo blockchain in an easily auditable way.  
 
-While there are certainly limitations to creating a program with a batch file, I was inspired by [DeckerSU's dexscripts.win32](https://github.com/DeckerSU/SuperNET/blob/dev-decker-dev/iguana/dexscripts.win32/how_to_use.md) for BarterDEX and being a script, anyone with some basic capability of reading code can review exactly what the program is doing without trusting in a compiled binary and also learn what goes on under the hood of fancy GUI wallets.   I was also able to complete the initial version in a little over 24 hours of total work which was important for me right in the middle of the notary node elections!
+While there are certainly limitations to creating a program with a batch file, I was inspired by [DeckerSU's dexscripts.win32](https://github.com/DeckerSU/SuperNET/blob/dev-decker-dev/iguana/dexscripts.win32/how_to_use.md) for BarterDEX and being a script, anyone with some basic capability of reading code can review exactly what the program is doing without trusting in a compiled binary and also learn what goes on under the hood of fancy GUI wallets.   
+
+I was able to complete the initial version in a little over 24 hours of total work which was important for me right in the middle of the notary node elections!
 
 ## Features
 
