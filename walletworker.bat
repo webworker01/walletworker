@@ -7,8 +7,6 @@ rem @author webworker01 <https://webworker.sh>
 
 rem Inspired by DeckerSU's dexscripts.win32
 
-rem @todo do the part for a fresh komodo installation
-rem @todo add risk warning and non-affiliated disclaimer
 rem @todo import private keys
 rem @todo add self update for this file
 rem @todo reduce update to once daily
@@ -56,8 +54,11 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     if exist "config.ini" (
         for /F "tokens=*" %%I in (config.ini) do set %%I
     ) else (
-        call :setupconfig
+        goto setupconfig
     )
+    goto setup
+
+:setup
     title=WalletWorker 0.0.1a for Komodo - https://webworker.sh/notary
     call :checkdirs
     call :checkzcash
@@ -69,17 +70,29 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
 :setupconfig
     cls
     echo.
-    echo WalletWorker quick setup
+    echo =[ WalletWorker for Komodo - Quick Setup ]=
+    echo.
+    echo WalletWorker is a working but experimental product. By proceeding, you acknowledge that you have read,
+    echo understood and agree to the conditions of the included LICENSE file.  
+    echo.
+    echo In particular, you understand that there is no warranty and agree to the limitations of liability as
+    echo detailed in sections 15 and 16 of the LICENSE.
+    echo.
+
+    choice /N /M "Do you agree with the above statement? [Y/N] "
+    SET licenseagree=%ERRORLEVEL%
+    if %licenseagree% equ 2 goto end
+    echo licenseagree=yes > config.ini
+
     echo.
     set /P inputdatadir=Enter a custom data directory or Enter for default [%APPDATA%\Komodo]: 
     call :trim inputdatadir
-    if "%inputdatadir%" equ "" (
-        type NUL > config.ini
-    ) else (
-        echo datadir=%inputdatadir% > config.ini
+
+    if "%inputdatadir%" neq "" (
+        echo datadir=%inputdatadir% >> config.ini
         set datadir=%inputdatadir%
     )
-    goto:eof
+    goto setup
 
 :checkdirs
     if exist datadir (
@@ -105,14 +118,20 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
 
 :checkkomodo
     if exist datadir (
-        if not exist "%datadir%\komodo.conf" (
-            copy komodo.conf %datadir%\komodo.conf
-        )
+        set configdir=%datadir%
     ) else (
-        if not exist "%APPDATA%\Komodo\komodo.conf" (
-            copy komodo.conf %APPDATA%\Komodo\komodo.conf
-        )
+        set configdir=%APPDATA%\Komodo
     )
+
+    if not exist "%configdir%\komodo.conf" (
+        copy komodo.conf %configdir%\komodo.conf
+        call :genrandom randomone
+        echo rpcuser=user!randomone! >> %configdir%\komodo.conf
+        call :genrandom randomtwo
+        echo rpcpassword=!randomtwo! >> %configdir%\komodo.conf
+        pause
+    )
+
     goto:eof
 
 :checkupdates
@@ -185,11 +204,11 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     echo [[94m4[0m] - List Transactions (last 10)
     echo [[94m5[0m] - Send Funds
     echo [[94m6[0m] - New Address
-    echo [[94m7[0m] - Private Keys Menu
+    REM echo [[94m7[0m] - Private Keys Menu
     echo.
 
     if not defined chosenac (
-        echo [[94mi[0m] - Collect Interest
+        REM echo [[94mi[0m] - Collect Interest
     )
     echo [[94mz[0m] - Check Private transaction results
     echo.
@@ -222,7 +241,7 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
 
 :collectinterest
 :privatekeymenu
-    echo not yet implemented
+    echo You found a hidden option, neat^^! But it's not implemented yet sorry.
     pause
     goto mainmenu
 
@@ -487,12 +506,24 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     goto:eof
 )
 
+rem @link https://superuser.com/a/571136
+:genrandom <resultVar> (
+    set alfanum=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
+    set pwd=
+    for /l %%b IN (0, 1, 32) DO (
+        set /a rnd_num=!RANDOM! * 62 / 32768 + 1
+        for /f %%c in ('echo %%alfanum:~!rnd_num!^,1%%') do set pwd=!pwd!%%c
+    )
+    set "%~1=%pwd%"
+    pause
+    goto:eof
+)
+
 :error
     echo There was a problem
     goto end
 
 :end
     echo.
-    echo Good bye!
+    echo Goodbye^^!
     endlocal
-    exit /B
