@@ -6,7 +6,11 @@ Please vote for me in the notary node elections by sending VOTE2018 to **RPyD36p
 
 ## What is this?
 
+![WalletWorker Main Menu](./screenshots/main.jpg)
+
 This is a fancy batch file which creates a lightweight wallet interface for Komodo and all of its assetchains.  It sets up and depends on the "native" blockchains that you wish to operate with. I am not planning on implementing SPV(electrum) functionality at this time, if you desire this please use the excellent [Agama wallet](https://komodoplatform.com/komodo-wallets/).
+
+[View more screenshots](./screenshots)
 
 ## Why did you make this?
 
