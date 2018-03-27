@@ -108,7 +108,6 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     SET loggingchoice=%ERRORLEVEL%
     if %loggingchoice% equ 1 echo logtoscreen=yes>> config.ini
     if %loggingchoice% equ 2 echo logtoscreen=no>> config.ini
-
     goto setup
 
 :checkdirs
@@ -144,7 +143,6 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
         echo rpcpassword=!randomtwo!>> %configdir%\komodo.conf
         pause
     )
-
     goto:eof
 
 :checkupdates
@@ -292,7 +290,6 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
         echo [id] not found
         pause
     )
-
     goto mainmenu
 
 :startkomodod
