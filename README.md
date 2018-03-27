@@ -2,7 +2,7 @@
 
 By [webworker01](https://webworker.sh/notary)
 
-Please vote for me in the notary node elections by sending VOTE2018 to RPyD36pL25mRh4uNR2AaEHfoUjVHYDUbVe
+Please vote for me in the notary node elections by sending VOTE2018 to **RPyD36pL25mRh4uNR2AaEHfoUjVHYDUbVe**
 
 ## What is this?
 
