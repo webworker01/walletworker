@@ -29,6 +29,12 @@ While there are certainly limitations to creating a program with a batch file, I
 * Graceful shutdown of daemons to help prevent corruption
 * Feel like a hacker using this futuristic text based interface with colors
 
+## How do I install this?
+
+Either git clone this repo or download the zip file and extract its contents anywhere you wish on your computer.
+
+Start walletworker.bat and answer the initial setup prompts. The rest _should_ set up automatically.
+
 ## Requirements
 
 Developed and tested on Win10x64 but _should_ work with Windows 7.
@@ -36,6 +42,12 @@ Developed and tested on Win10x64 but _should_ work with Windows 7.
 Some features use PowerShell 2.0 functions which requires .NET Framework 2.0, but these should be installed with Windows 7 and up.
 
 Any other requirements will come from komodod and komodo-cli, but if all goes well, these will be installed for you when you first start up the bat file.
+
+## I'm having problems or have suggestions!
+
+Please feel free to open an issue on this repo.  Ideally you don't need to, but if you do, maybe double check that there wasn't a similar ticket.
+
+Pull requests are also welcome!
 
 ## Potential Future Enhancements
 
@@ -51,7 +63,5 @@ I need to make sure everything is solid with the current features before adding 
 ## Get in Touch
 
 If you have any questions or comments, please feel free to reach out to me on the Komodo Slack or Telegram @webworker01
-
-Pull requests are also welcome!
 
 Please consider me during your voting for the Komodo Notary Node elections, this is just a small sample of what I can contribute to the community :)
