@@ -35,3 +35,9 @@ Backup your wallet files to a few key locations on your system. The files will b
 ![WalletWorker Private Keys Menu](./privkeys.jpg)
 
 Control your private keys! Export, Import or Dump them all to a text file if you really want.
+
+## Output Logs to Screen
+
+![WalletWorker Daemon Output](./daemons.jpg)
+
+Each instance of komodod is labeled with with the asset chain name that it is running. See the logs of the daemon in real-time on screen so you know exactly what is going on in the background!
