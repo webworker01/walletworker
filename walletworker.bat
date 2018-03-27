@@ -8,7 +8,6 @@ rem @author webworker01 <https://webworker.sh>
 rem Inspired by DeckerSU's dexscripts.win32
 
 rem @todo import/export private keys
-rem @todo gracefully shutdown komodo stop (komodo-cli stop [-ac_name=??] need to store the state of all started acs for this)
 rem @todo better options/handling for daemon windows (e.g. don't show daemon window at all)
 rem @todo get live list of assetchains
 rem @todo collect interest
@@ -24,7 +23,14 @@ goto startup
 REM bat files are finicky.. this is way up here so it doesn't accidently get run if a section below fails
 :kill
     echo Shutting down services...
-    taskkill /T /IM komodod.exe
+    bin\komodo-cli --datadir=%configdir% stop
+    for /f "tokens=2" %%a in (acs.txt) do (
+        if exist "%configdir%\%%a" (
+            bin\komodo-cli --datadir=%configdir%\%%a -ac_name=%%a stop
+        )
+    )
+    rem kill em all
+    rem taskkill /T /IM komodod.exe
     goto end
 
 :help
@@ -105,10 +111,12 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     goto setup
 
 :checkdirs
-    if exist datadir (
+    if defined datadir (
         if not exist "%datadir%" mkdir %datadir%
+        set configdir=%datadir%
     ) else (
         if not exist "%APPDATA%\Komodo" mkdir "%APPDATA%\Komodo"
+        set configdir=%APPDATA%\Komodo
     )
     if not exist "%APPDATA%\ZcashParams" mkdir "%APPDATA%\ZcashParams"
     if not exist "bin" mkdir bin
@@ -127,12 +135,6 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     goto:eof
 
 :checkkomodo
-    if exist datadir (
-        set configdir=%datadir%
-    ) else (
-        set configdir=%APPDATA%\Komodo
-    )
-
     if not exist "%configdir%\komodo.conf" (
         copy komodo.conf %configdir%\komodo.conf
         call :genrandom randomone
@@ -182,7 +184,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo WalletWorker 0.0.1a - [32mhttps://webworker.sh/notary[0m
     echo ----------------------------------------
     echo.
-    echo Currently on [[94m[43m%walletlabel%[0m] Chain in %datadir%
+    echo Currently on [[94m[43m%walletlabel%[0m] Chain in %configdir%
     echo.
     goto:eof
 
@@ -279,9 +281,9 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
         set kmdparamacname=-ac_name=%chosenac%
         set kmdparamacsupply=-ac_supply=%chosenacsupply%
         if defined datadir (
-            set kmdparamdatadir=-datadir=%datadir%\%chosenac% -exportdir=%datadir%
+            set kmdparamdatadir=-datadir=%configdir%\%chosenac% -exportdir=%configdir%
         ) else (
-            set kmdparamdatadir=-exportdir=%APPDATA%\Komodo
+            set kmdparamdatadir=-exportdir=%configdir%
         )
     ) else (
         echo [id] not found
@@ -294,6 +296,10 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     if "%logtoscreen%" equ "yes" (
         set printtoconsole=-printtoconsole
     )
+
+    if defined chosenac (
+        if not exist %configdir%\%chosenac% mkdir %configdir%\%chosenac%
+    ) 
 
     start "[%walletlabel%] komodod.exe" bin\komodod %printtoconsole% %kmdparamdatadir% %kmdparamacname% %kmdparamacsupply%
     echo.
@@ -337,12 +343,6 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
         set backupwalletname=walletKMD%datestr%
     ) else (
         set backupwalletname=wallet%chosenac%%datestr%
-    )
-
-    if defined datadir (
-        set configdir=%datadir%
-    ) else (
-        set configdir=%APPDATA%\Komodo
     )
 
     echo We will now backup your wallet to the directory you choose as %backupwalletname%
