@@ -66,6 +66,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 
 :setup
     title=WalletWorker 0.0.1a for Komodo - https://webworker.sh/notary
+    mode con:cols=150 lines=40
     call :checkdirs
     call :checkzcash
     call :checkkomodo
