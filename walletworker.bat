@@ -103,7 +103,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     )
 
     echo.
-    choice /N /M "Would you like to show komodod logs in the daemon windows? [[32mY[0m/N] "
+    choice /N /M "Would you like to show komodod logs in the daemon windows? [Y/N] "
     SET loggingchoice=%ERRORLEVEL%
     if %loggingchoice% equ 1 echo logtoscreen=yes>> config.ini
     if %loggingchoice% equ 2 echo logtoscreen=no>> config.ini
