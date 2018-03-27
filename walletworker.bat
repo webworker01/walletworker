@@ -7,13 +7,13 @@ rem Inspired by DeckerSU's dexscripts.win32
 
 rem @todo do the part for a fresh komodo installation
 rem @todo handle unable to check for updates
-rem @todo validate send to address format is correct
-rem @todo I think need to detect R address vs Z address and possibly use different methods to send (where the balances are coming from might make a difference too)
 rem @todo gracefully shutdown komodo stop (komodo-cli stop [-ac_name=??])
-rem @todo encrypt/decrypt wallet.dat with passphrase (verify/write up some msgs about incompatibility with agama)
-rem @todo backup wallet (to desktop or documents?)
+rem @todo backup wallet (give user option to send to desktop or documents?)
 rem @todo add learning mode
 rem @todo get live list of assetchains
+rem @todo collect interest
+rem @todo import private keys
+rem @todo encrypt/decrypt wallet.dat with passphrase (verify/write up some msgs about incompatibility with agama)
 
 :startup
     for /F "tokens=*" %%I in (config.ini) do set %%I
@@ -30,7 +30,7 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     goto end
 
 :help
-    call:menuheader
+    call :menuheader
     echo [31m^^^^[0mPay attention to the line above the menus indicating which chain you currently have selected[31m^^^^[0m
     echo.
     echo Menus are mostly case sensitive, so pay attention to the commands displayed in square brackets []
@@ -39,9 +39,14 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     echo.
     echo SPV(electrum) is not currently supported, and might never be. Please use Agama wallet if you require this functionality
     echo.
-    echo When you start komodod for a given chain, you must wait for the blocks that you already had downloaded to be reverified and the block chain started syncing before any of the other commands will function.  You will see lines starting with "UpdateTip" when syncing has started.
+    echo When you start komodod for a given chain, you must wait for the blocks that you already had downloaded to be reverified 
+    echo and the block chain started syncing before any of the other commands will function.  
+    echo.
+    echo You will see lines starting with "UpdateTip" when syncing has started.
     echo.
     echo Developed on Win10x64 although Windows 7 *should* be supported
+    echo.
+    echo If you found this program useful, please star it on https://github.com/webworker01/walletworker
     echo.
     pause
     goto mainmenu
@@ -108,8 +113,7 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     goto:eof
 
 :menuheader
-    rem cls
-    echo.
+    cls
     echo.
     echo WalletWorker 0.0.1a - [32mhttps://webworker.sh/notary[0m
     echo ----------------------------------------
@@ -131,7 +135,7 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     goto mainmenu
 
 :mainmenu
-    call:menuheader
+    call :menuheader
 
     echo [[32ms[0m] - Start komodod.exe for [[94m[43m%walletlabel%[0m]
     echo [[32ma[0m] - Asset Chains menu
@@ -141,36 +145,51 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     )
 
     echo.
-    echo [[94m1[0m] - Get Info (komodod must be started/synced)
-    echo [[94m2[0m] - List Addresses
-    echo [[94m3[0m] - List Transactions (last 10)
-    echo [[94m4[0m] - Send Funds
-    echo [[94m5[0m] - New Address
-    echo [[94m6[0m] - New Z Address
+    echo Options in blue require komodod to be started and synced
+    echo [[94m1[0m] - Get Balance
+    echo [[94m2[0m] - Get Info
+    echo [[94m3[0m] - List Addresses
+    echo [[94m4[0m] - List Transactions (last 10)
+    echo [[94m5[0m] - Send Funds
+    echo [[94m6[0m] - New Address
+    echo [[94m7[0m] - Private Keys Menu
     echo.
+
+    if not defined chosenac (
+        echo [[94mi[0m] - Collect Interest
+        echo.
+    )
+
     echo [[32mh[0m] - Help
     echo [[32mw[0m] - Visit website
     echo.
     echo [[33mx[0m] - Exit WalletWorker
     echo [[31mX[0m] - Exit WalletWorker and stop all services
     echo.
-    choice /CS /C xXs123vak456hw /N /M "Choose an option: "
+    choice /CS /C sak1234567hwxXi /N /M "Choose an option: "
     SET choice=%ERRORLEVEL%
-    if %choice% equ 1 goto end
-    if %choice% equ 2 goto kill
-    if %choice% equ 3 goto startkomodod
-    if %choice% equ 4 goto getinfo
-    if %choice% equ 5 goto listaddresses
-    if %choice% equ 6 goto listtransactions
-    if %choice% equ 7 goto votemenu
-    if %choice% equ 8 goto acmenu
-    if %choice% equ 9 goto kmdswitch
-    if %choice% equ 10 goto sendtoaddress
-    if %choice% equ 11 goto getnewaddress
-    if %choice% equ 12 goto zgetnewaddress
-    if %choice% equ 13 goto help
-    if %choice% equ 14 goto webworker
+    if %choice% equ 1 goto startkomodod
+    if %choice% equ 2 goto acmenu
+    if %choice% equ 3 goto kmdswitch
+    if %choice% equ 4 goto getbalance
+    if %choice% equ 5 goto getinfo
+    if %choice% equ 6 goto listaddresses
+    if %choice% equ 7 goto listtransactions
+    if %choice% equ 8 goto sendtoaddress
+    if %choice% equ 9 goto getnewaddress
+    if %choice% equ 10 goto privatekeymenu
+    if %choice% equ 11 goto help
+    if %choice% equ 12 goto webworker
+    if %choice% equ 13 goto end
+    if %choice% equ 14 goto kill
+    if %choice% equ 15 goto collectinterest
     goto end
+
+:collectinterest
+:privatekeymenu
+    echo not yet implemented
+    pause
+    goto mainmenu
 
 :acmenu
     call:menuheader
@@ -220,7 +239,17 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     goto mainmenu
 
 :getnewaddress
-    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getnewaddress
+    call :menuheader
+    echo [[94m1[0m] - New Transparent R Address
+    echo [[94m2[0m] - New Private Z Address
+    echo.
+    echo [[33mx[0m] - Return to Main Menu
+    echo.
+    choice /CS /C 12x /N /M "Choose an option: "
+    SET choice=%ERRORLEVEL%
+    if %choice% equ 1 bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getnewaddress
+    if %choice% equ 2 bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_getnewaddress
+    if %choice% equ 3 goto mainmenu
     pause
     goto mainmenu
 
@@ -229,10 +258,27 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     pause
     goto mainmenu
 
+:getbalance
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getbalance
+    pause
+    goto mainmenu
+
 :listaddresses
-    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listreceivedbyaddress 1 true |more
-    rem bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getaddressesbyaccount "" |more
-    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_listaddresses |more
+    call :menuheader
+    echo [[94m1[0m] - GetAddressesByAccount
+    echo [[94m2[0m] - ListReceivedByAddress
+    echo [[94m3[0m] - ListAddressGroupings
+    echo [[94m4[0m] - Z_ListAddresses
+    echo.
+    echo [[33mx[0m] - Return to Main Menu
+    echo.
+    choice /CS /C 1234x /N /M "Choose an option: "
+    SET choice=%ERRORLEVEL%
+    if %choice% equ 1 bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getaddressesbyaccount "" |more
+    if %choice% equ 2 bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listreceivedbyaddress 1 true |more
+    if %choice% equ 3 bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listaddressgroupings |more
+    if %choice% equ 4 bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_listaddresses |more
+    if %choice% equ 5 goto mainmenu
     pause
     goto mainmenu
 
@@ -271,16 +317,30 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     )
     goto:eof
 
+:sendcheckprivaddresses
+    set thisprivtransvalid=
+    if /I %thistoaddressfirstletter% equ Z set thisprivtransvalid=1
+    if /I %thisfromaddressfirstletter% equ Z set thisprivtransvalid=1
+
+    if not defined thisprivtransvalid (
+        echo Sorry one of your addresses must be a Z address for a Private transaction. Please use Transparent transaction.
+        pause
+        goto mainmenu
+    )
+    goto:eof
+
 :sendtoaddress
     set thistranstype=1
     set thistranstrans=
     set thisprivtrans=
     set thisfromaddress=
     set thistoaddress=
-    set thistoamount=
+    set thisamount=
 
     echo.
-    echo [31mWarning^^![0m Validation of entries here is tricky and still a work in progress!
+    echo [31mWarning^^![0m Validation of entries here is tricky and still a work in progress^^!
+    echo While there are some safeguards already put in place, you are using this feature at your own risk^^!
+    echo If you receive any output that looks out of place, you can always type CTRL-C to abort the bat file^^!
     echo Please check and double check that you are using the values you wish to use^^!
     echo.
     echo Do you wish to send a [T]ransparent or [P]rivate transaction?
@@ -290,12 +350,14 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     if %thistranstype% equ 2 set thisprivtrans=1
 
     if %thistranstype% equ 1 (
+        echo.
         echo Setting up a Transparent transaction
         echo Note: This will attempt to use any available funds in your wallet
         echo.
     )
 
     if %thistranstype% equ 2 (
+        echo.
         echo Setting up a Private transaction
         echo Note: You will need to specify the address which has funds you wish to use
         echo At least one of the 2 addresses must be a Z address
@@ -330,6 +392,10 @@ rem @link https://stackoverflow.com/a/3002207/5016797
         goto mainmenu
     )
 
+    if %thistranstype% equ 2 (
+        call :sendcheckprivaddresses
+    )
+
     set /P thisamount=Enter the amount to send: 
     echo %thisamount%|findstr /xr "[.]*[0-9][.]*[0-9]* 0" >nul && (
         echo.
@@ -354,11 +420,6 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     )
     goto mainmenu
 
-:zgetnewaddress
-    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_getnewaddress
-    pause
-    goto mainmenu
-
 :error
     echo There was a problem
     goto end
@@ -367,3 +428,4 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     echo.
     echo Good bye!
     endlocal
+    exit /B
