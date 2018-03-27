@@ -7,21 +7,21 @@ rem @author webworker01 <https://webworker.sh>
 
 rem Inspired by DeckerSU's dexscripts.win32
 
-rem @todo import private keys
-rem @todo add self update for this file
-rem @todo reduce update to once daily
-rem @todo add check for update option
-rem @todo handle unable to check for updates
-rem @todo gracefully shutdown komodo stop (komodo-cli stop [-ac_name=??])
-rem @todo backup wallet (give user option to send to desktop or documents?)
+rem @todo import/export private keys
+rem @todo gracefully shutdown komodo stop (komodo-cli stop [-ac_name=??] need to store the state of all started acs for this)
+rem @todo better options/handling for daemon windows (e.g. don't show daemon window at all)
 rem @todo get live list of assetchains
 rem @todo collect interest
 rem @todo encrypt/decrypt wallet.dat with passphrase (verify/write up some msgs about incompatibility with agama)
 rem @todo add learning mode
+rem @todo add self update for this file
+rem @todo reduce update to once daily
+rem @todo add check for update option
+rem @todo handle unable to check for updates
 
 goto startup
 
-REM bat files are finicky this is way up here so it doesn't accidently get run if a section below fails
+REM bat files are finicky.. this is way up here so it doesn't accidently get run if a section below fails
 :kill
     echo Shutting down services...
     taskkill /T /IM komodod.exe
@@ -73,7 +73,7 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     echo =[ WalletWorker for Komodo - Quick Setup ]=
     echo.
     echo WalletWorker is a working but experimental product. By proceeding, you acknowledge that you have read,
-    echo understood and agree to the conditions of the included LICENSE file.  
+    echo understood and agree to the conditions of the included LICENSE file in its entirety.  
     echo.
     echo In particular, you understand that there is no warranty and agree to the limitations of liability as
     echo detailed in sections 15 and 16 of the LICENSE.
@@ -82,16 +82,26 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     choice /N /M "Do you agree with the above statement? [Y/N] "
     SET licenseagree=%ERRORLEVEL%
     if %licenseagree% equ 2 goto end
-    echo licenseagree=yes > config.ini
+    echo licenseagree=yes> config.ini
 
+    echo.
+    echo You can choose a custom data directory here if you wish. Make sure it is a valid path^^!
+    echo If you mess this up, delete config.ini and start over.
     echo.
     set /P inputdatadir=Enter a custom data directory or Enter for default [%APPDATA%\Komodo]: 
     call :trim inputdatadir
 
     if "%inputdatadir%" neq "" (
-        echo datadir=%inputdatadir% >> config.ini
+        echo datadir=%inputdatadir%>> config.ini
         set datadir=%inputdatadir%
     )
+
+    echo.
+    choice /N /M "Would you like to show komodod logs in the daemon windows? [[32mY[0m/N] "
+    SET loggingchoice=%ERRORLEVEL%
+    if %loggingchoice% equ 1 echo logtoscreen=yes>> config.ini
+    if %loggingchoice% equ 2 echo logtoscreen=no>> config.ini
+
     goto setup
 
 :checkdirs
@@ -148,6 +158,8 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
 
 :getupdates
     if defined newupdate (
+        echo New updates were found for komodod. Please make sure any existing komodod.exe instances are fully closed before continuing.
+        pause
         echo Updating, please wait...
         powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/komodo-cli.exe', 'bin\komodo-cli.exe')"
         powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/komodo-tx.exe', 'bin\komodo-tx.exe')"
@@ -170,7 +182,7 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     echo WalletWorker 0.0.1a - [32mhttps://webworker.sh/notary[0m
     echo ----------------------------------------
     echo.
-    echo Currently on [[94m[43m%walletlabel%[0m] Chain
+    echo Currently on [[94m[43m%walletlabel%[0m] Chain in %datadir%
     echo.
     goto:eof
 
@@ -182,7 +194,9 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     set kmdparamacname=
     set kmdparamacsupply=
     if defined datadir (
-        set kmdparamdatadir=-datadir=%datadir%
+        set kmdparamdatadir=-datadir=%datadir% -exportdir=%datadir%
+    ) else (
+        set kmdparamdatadir=-exportdir=%APPDATA%\Komodo
     )
     goto mainmenu
 
@@ -207,6 +221,7 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     REM echo [[94m7[0m] - Private Keys Menu
     echo.
 
+    echo [[94mb[0m] - Backup wallet.dat
     if not defined chosenac (
         REM echo [[94mi[0m] - Collect Interest
     )
@@ -214,12 +229,12 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     echo.
 
     echo [[32mh[0m] - Help
-    echo [[32mw[0m] - Visit website
+    echo [[32mw[0m] - My notary node proposal
     echo.
     echo [[33mx[0m] - Exit WalletWorker
     echo [[31mX[0m] - Exit WalletWorker and stop all services
     echo.
-    choice /CS /C sak1234567hwxXiz /N /M "Choose an option: "
+    choice /CS /C sak1234567hwxXizb /N /M "Choose an option: "
     SET choice=%ERRORLEVEL%
     if %choice% equ 1 goto startkomodod
     if %choice% equ 2 goto acmenu
@@ -237,13 +252,8 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     if %choice% equ 14 goto kill
     if %choice% equ 15 goto collectinterest
     if %choice% equ 16 goto zresults
+    if %choice% equ 17 goto backupwallet
     goto end
-
-:collectinterest
-:privatekeymenu
-    echo You found a hidden option, neat^^! But it's not implemented yet sorry.
-    pause
-    goto mainmenu
 
 :acmenu
     call:menuheader
@@ -269,7 +279,9 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
         set kmdparamacname=-ac_name=%chosenac%
         set kmdparamacsupply=-ac_supply=%chosenacsupply%
         if defined datadir (
-            set kmdparamdatadir=-datadir=%datadir%\%chosenac%
+            set kmdparamdatadir=-datadir=%datadir%\%chosenac% -exportdir=%datadir%
+        ) else (
+            set kmdparamdatadir=-exportdir=%APPDATA%\Komodo
         )
     ) else (
         echo [id] not found
@@ -279,15 +291,84 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     goto mainmenu
 
 :startkomodod
-    start "[%walletlabel%] komodod.exe" bin\komodod -printtoconsole %kmdparamdatadir% %kmdparamacname% %kmdparamacsupply%
+    if "%logtoscreen%" equ "yes" (
+        set printtoconsole=-printtoconsole
+    )
+
+    start "[%walletlabel%] komodod.exe" bin\komodod %printtoconsole% %kmdparamdatadir% %kmdparamacname% %kmdparamacsupply%
     echo.
     echo Starting komodod.exe for [%walletlabel%]
+    echo.
+    echo A new window was opened for [%walletlabel%], you can minimize this or leave it up, 
+    echo but do not close it if you wish to do anything with it.
+    echo.
+    echo If you don't want to see all the log messages in that window you can change logtoscreen=no
+    echo or logtoscreen=yes if you want them in config.ini
     echo.
     echo Before running any other commands the blockchain must be syncing
     echo Check in komodod.exe window for lines starting with "UpdateTip"
     echo.
     echo Then in choose Get Info and check that "blocks" = "longestchain" to verify fully synced
     echo.
+    pause
+    goto mainmenu
+
+:collectinterest
+:privatekeymenu
+    echo You found a hidden option, neat^^! But it's not implemented yet sorry.
+    pause
+    goto mainmenu
+
+:backupwallet
+    call :menuheader
+
+    for /f "tokens=1-4 delims=/ " %%i in ("%date%") do (
+        set month=%%j
+        set day=%%k
+        set year=%%l
+    )
+    for /f "tokens=1-4 delims=: " %%m in ("%time%") do (
+        set hour=%%m
+        set minute=%%n
+    )
+    set datestr=%year%%month%%day%%hour%%minute%
+
+    if not defined chosenac (
+        set backupwalletname=walletKMD%datestr%
+    ) else (
+        set backupwalletname=wallet%chosenac%%datestr%
+    )
+
+    if defined datadir (
+        set configdir=%datadir%
+    ) else (
+        set configdir=%APPDATA%\Komodo
+    )
+
+    echo We will now backup your wallet to the directory you choose as %backupwalletname%
+    echo.
+    echo [[94m1[0m] - %USERPROFILE%\Documents
+    echo [[94m2[0m] - %USERPROFILE%\Desktop
+    echo [[94m3[0m] - %configdir%
+    echo.
+    echo [[33mx[0m] - Return to Main Menu
+    echo.
+    choice /C 123x /N /M "Choose a backup location: "
+    SET choice=%ERRORLEVEL%
+    if %choice% equ 4 goto mainmenu
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% backupwallet %backupwalletname%
+    if %choice% equ 1 move %configdir%\%backupwalletname% %USERPROFILE%\Documents\
+    if %choice% equ 2 move %configdir%\%backupwalletname% %USERPROFILE%\Desktop\
+    pause
+    goto mainmenu
+
+:getbalance
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getbalance
+    pause
+    goto mainmenu
+
+:getinfo
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getinfo
     pause
     goto mainmenu
 
@@ -303,16 +384,6 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     if %choice% equ 1 bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getnewaddress
     if %choice% equ 2 bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_getnewaddress
     if %choice% equ 3 goto mainmenu
-    pause
-    goto mainmenu
-
-:getinfo
-    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getinfo
-    pause
-    goto mainmenu
-
-:getbalance
-    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getbalance
     pause
     goto mainmenu
 
@@ -473,13 +544,13 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     )
     goto mainmenu
 
+:webworker
+    start "" https://webworker.sh/notary
+    goto mainmenu
+
 :zresults
     bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_getoperationresult
     pause
-    goto mainmenu
-
-:webworker
-    start "" https://webworker.sh/notary
     goto mainmenu
 
 rem @link https://stackoverflow.com/a/5841587/5016797
@@ -520,7 +591,7 @@ rem @link https://superuser.com/a/571136
 )
 
 :error
-    echo There was a problem
+    echo There was a problem^^!
     goto end
 
 :end
