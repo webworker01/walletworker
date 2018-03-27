@@ -7,8 +7,7 @@ rem @author webworker01 <https://webworker.sh>
 
 rem Inspired by DeckerSU's dexscripts.win32
 
-rem @todo import/export private keys
-rem @todo better options/handling for daemon windows (e.g. don't show daemon window at all)
+rem @todo better options/handling for daemon windows (e.g. option to not show daemon window at all)
 rem @todo get live list of assetchains
 rem @todo collect interest
 rem @todo encrypt/decrypt wallet.dat with passphrase (verify/write up some msgs about incompatibility with agama)
@@ -220,7 +219,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo [[94m4[0m] - List Transactions (last 10)
     echo [[94m5[0m] - Send Funds
     echo [[94m6[0m] - New Address
-    REM echo [[94m7[0m] - Private Keys Menu
+    echo [[94m7[0m] - Private Keys Menu
     echo.
 
     echo [[94mb[0m] - Backup wallet.dat
@@ -247,7 +246,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     if %choice% equ 7 goto listtransactions
     if %choice% equ 8 goto sendtoaddress
     if %choice% equ 9 goto getnewaddress
-    if %choice% equ 10 goto privatekeymenu
+    if %choice% equ 10 goto privkeymenu
     if %choice% equ 11 goto help
     if %choice% equ 12 goto webworker
     if %choice% equ 13 goto end
@@ -314,38 +313,32 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo Before running any other commands the blockchain must be syncing
     echo Check in komodod.exe window for lines starting with "UpdateTip"
     echo.
-    echo Then in choose Get Info and check that "blocks" = "longestchain" to verify fully synced
+    echo Then choose Get Info and check that "blocks" = "longestchain" to verify fully synced
     echo.
     pause
     goto mainmenu
 
 :collectinterest
-:privatekeymenu
     echo You found a hidden option, neat^^! But it's not implemented yet sorry.
     pause
     goto mainmenu
 
 :backupwallet
     call :menuheader
+    set exportprefix=wallet
+    set exportmethod=backupwallet
+    goto exportdata
 
-    for /f "tokens=1-4 delims=/ " %%i in ("%date%") do (
-        set month=%%j
-        set day=%%k
-        set year=%%l
-    )
-    for /f "tokens=1-4 delims=: " %%m in ("%time%") do (
-        set hour=%%m
-        set minute=%%n
-    )
-    set datestr=%year%%month%%day%%hour%%minute%
+:exportdata
+    call :datestr
 
     if not defined chosenac (
-        set backupwalletname=walletKMD%datestr%
+        set exportfilename=%exportprefix%KMD%datestr%
     ) else (
-        set backupwalletname=wallet%chosenac%%datestr%
+        set exportfilename=%exportprefix%%chosenac%%datestr%
     )
 
-    echo We will now backup your wallet to the directory you choose as %backupwalletname%
+    echo We will now backup your %exportprefix% to the directory you choose as %exportfilename%
     echo.
     echo [[94m1[0m] - %USERPROFILE%\Documents
     echo [[94m2[0m] - %USERPROFILE%\Desktop
@@ -353,12 +346,12 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo.
     echo [[33mx[0m] - Return to Main Menu
     echo.
-    choice /C 123x /N /M "Choose a backup location: "
+    choice /C 123x /N /M "Choose a directory: "
     SET choice=%ERRORLEVEL%
     if %choice% equ 4 goto mainmenu
-    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% backupwallet %backupwalletname%
-    if %choice% equ 1 move %configdir%\%backupwalletname% %USERPROFILE%\Documents\
-    if %choice% equ 2 move %configdir%\%backupwalletname% %USERPROFILE%\Desktop\
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% %exportmethod% %exportfilename%
+    if %choice% equ 1 move %configdir%\%exportfilename% %USERPROFILE%\Documents\
+    if %choice% equ 2 move %configdir%\%exportfilename% %USERPROFILE%\Desktop\
     pause
     goto mainmenu
 
@@ -408,6 +401,62 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 
 :listtransactions
     bin\komodo-cli %kmdparamdatadir% %kmdparamacname% listtransactions |more
+    pause
+    goto mainmenu
+
+:privkeymenu
+    call :menuheader
+    set thisprivkey=
+
+    echo [[94m1[0m] - Import key for R Address
+    echo [[94m2[0m] - Import key for Z Address
+    echo [[94m3[0m] - Export key for R Address
+    echo [[94m4[0m] - Export key for Z Address
+    echo [[94m5[0m] - Dump wallet (as txt file)
+    echo.
+    echo [[33mx[0m] - Return to Main Menu
+    echo.
+    choice /CS /C 12345x /N /M "Choose an option: "
+    echo.
+    SET choice=%ERRORLEVEL%
+
+    if %choice% equ 1 (
+        set privkeymethod=importprivkey
+        goto importprivkey
+    )
+    if %choice% equ 2 (
+        set privkeymethod=z_importkey
+        goto importprivkey
+    )
+    if %choice% equ 3 (
+        set privkeymethod=dumpprivkey
+        goto dumpprivkey
+    )
+    if %choice% equ 4 (
+        set privkeymethod=z_exportkey
+        goto dumpprivkey
+    )
+    if %choice% equ 5 (
+        set exportprefix=keys
+        set exportmethod=z_exportwallet
+        goto exportdata
+    )
+    if %choice% equ 6 goto mainmenu
+    goto mainmenu
+
+:dumpprivkey
+    set thisaddress=
+    set /P thisaddress=Enter the address: 
+    call :trim thisaddress
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% %privkeymethod% %thisaddress%
+    pause
+    goto mainmenu
+
+:importprivkey
+    set thisprivkey=
+    set /P thisprivkey=Enter the private key: 
+    call :trim thisprivkey
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% %privkeymethod% %thisaddress%
     pause
     goto mainmenu
 
@@ -553,6 +602,32 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     pause
     goto mainmenu
 
+:datestr 
+    for /f "tokens=1-4 delims=/ " %%i in ("%date%") do (
+        set month=%%j
+        set day=%%k
+        set year=%%l
+    )
+    for /f "tokens=1-4 delims=: " %%m in ("%time%") do (
+        set hour=%%m
+        set minute=%%n
+    )
+    set datestr=%year%%month%%day%%hour%%minute%
+    goto:eof
+
+rem @link https://superuser.com/a/571136
+:genrandom <resultVar> (
+    set alfanum=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
+    set pwd=
+    for /l %%b IN (0, 1, 32) DO (
+        set /a rnd_num=!RANDOM! * 62 / 32768 + 1
+        for /f %%c in ('echo %%alfanum:~!rnd_num!^,1%%') do set pwd=!pwd!%%c
+    )
+    set "%~1=%pwd%"
+    pause
+    goto:eof
+)
+
 rem @link https://stackoverflow.com/a/5841587/5016797
 :strlen <stringVar> <resultVar> (   
     set "s=!%~1!#"
@@ -574,19 +649,6 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     for /f "tokens=* delims= " %%a in ("%s%") do set input=%%a
     for /l %%a in (1,1,100) do if "!input:~-1!"==" " set input=!input:~0,-1!
     set "%~1=%input%"
-    goto:eof
-)
-
-rem @link https://superuser.com/a/571136
-:genrandom <resultVar> (
-    set alfanum=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
-    set pwd=
-    for /l %%b IN (0, 1, 32) DO (
-        set /a rnd_num=!RANDOM! * 62 / 32768 + 1
-        for /f %%c in ('echo %%alfanum:~!rnd_num!^,1%%') do set pwd=!pwd!%%c
-    )
-    set "%~1=%pwd%"
-    pause
     goto:eof
 )
 
