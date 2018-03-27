@@ -3,25 +3,25 @@ setlocal enabledelayedexpansion
 rem *UNRELATED* https://github.com/firehol/netdata/wiki
 
 rem WalletWorker 0.0.1a for Komodo
+rem @author webworker01 <https://webworker.sh>
+
 rem Inspired by DeckerSU's dexscripts.win32
 
 rem @todo do the part for a fresh komodo installation
+rem @todo add risk warning and non-affiliated disclaimer
+rem @todo import private keys
+rem @todo add self update for this file
+rem @todo reduce update to once daily
+rem @todo add check for update option
 rem @todo handle unable to check for updates
 rem @todo gracefully shutdown komodo stop (komodo-cli stop [-ac_name=??])
 rem @todo backup wallet (give user option to send to desktop or documents?)
-rem @todo add learning mode
 rem @todo get live list of assetchains
 rem @todo collect interest
-rem @todo import private keys
 rem @todo encrypt/decrypt wallet.dat with passphrase (verify/write up some msgs about incompatibility with agama)
+rem @todo add learning mode
 
-:startup
-    for /F "tokens=*" %%I in (config.ini) do set %%I
-    title=WalletWorker 0.0.1a for Komodo - https://webworker.sh/notary
-    call:checkdirs
-    call:checkupdates
-    call:getupdates
-    goto kmdswitch
+goto startup
 
 REM bat files are finicky this is way up here so it doesn't accidently get run if a section below fails
 :kill
@@ -46,40 +46,73 @@ REM bat files are finicky this is way up here so it doesn't accidently get run i
     echo.
     echo Developed on Win10x64 although Windows 7 *should* be supported
     echo.
-    echo If you found this program useful, please star it on https://github.com/webworker01/walletworker
+    echo If you found this program useful, please star it on https://github.com/webworker01/walletworker and 
+    echo vote for me as a notary node to support future projects.
     echo.
     pause
     goto mainmenu
 
-:webworker
-    start "" https://webworker.sh/notary
-    goto mainmenu
-
-rem @link https://stackoverflow.com/a/5841587/5016797
-:strlen <stringVar> <resultVar> (   
-    set "s=!%~1!#"
-    set "len=0"
-    for %%P in (4096 2048 1024 512 256 128 64 32 16 8 4 2 1) do (
-        if "!s:~%%P,1!" NEQ "" ( 
-            set /a "len+=%%P"
-            set "s=!s:~%%P!"
-        )
+:startup
+    if exist "config.ini" (
+        for /F "tokens=*" %%I in (config.ini) do set %%I
+    ) else (
+        call :setupconfig
     )
-) (
-    set "%~2=%len%"
-)
+    title=WalletWorker 0.0.1a for Komodo - https://webworker.sh/notary
+    call :checkdirs
+    call :checkzcash
+    call :checkkomodo
+    call :checkupdates
+    call :getupdates
+    goto kmdswitch
 
-rem @link https://stackoverflow.com/a/3002207/5016797
-:trim <stringVar> (
-    set "s=!%~1!"
-    for /f "tokens=* delims= " %%a in ("%s%") do set input=%%a
-    for /l %%a in (1,1,100) do if "!input:~-1!"==" " set input=!input:~0,-1!
-    set "%~1=%input%"
-)
+:setupconfig
+    cls
+    echo.
+    echo WalletWorker quick setup
+    echo.
+    set /P inputdatadir=Enter a custom data directory or Enter for default [%APPDATA%\Komodo]: 
+    call :trim inputdatadir
+    if "%inputdatadir%" equ "" (
+        type NUL > config.ini
+    ) else (
+        echo datadir=%inputdatadir% > config.ini
+        set datadir=%inputdatadir%
+    )
+    goto:eof
 
 :checkdirs
+    if exist datadir (
+        if not exist "%datadir%" mkdir %datadir%
+    ) else (
+        if not exist "%APPDATA%\Komodo" mkdir "%APPDATA%\Komodo"
+    )
+    if not exist "%APPDATA%\ZcashParams" mkdir "%APPDATA%\ZcashParams"
     if not exist "bin" mkdir bin
     if not exist "tmp" mkdir tmp
+    goto:eof
+
+:checkzcash
+    if not exist "%APPDATA%\ZcashParams\sprout-proving.key" (
+        cls
+        echo.
+        echo Download ZcashParams, please wait ... it's about 900MB be patient
+        echo.
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://z.cash/downloads/sprout-proving.key', '%APPDATA%\ZcashParams\sprout-proving.key')"
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://z.cash/downloads/sprout-verifying.key', '%APPDATA%\ZcashParams\sprout-verifying.key')"
+    )
+    goto:eof
+
+:checkkomodo
+    if exist datadir (
+        if not exist "%datadir%\komodo.conf" (
+            copy komodo.conf %datadir%\komodo.conf
+        )
+    ) else (
+        if not exist "%APPDATA%\Komodo\komodo.conf" (
+            copy komodo.conf %APPDATA%\Komodo\komodo.conf
+        )
+    )
     goto:eof
 
 :checkupdates
@@ -157,8 +190,9 @@ rem @link https://stackoverflow.com/a/3002207/5016797
 
     if not defined chosenac (
         echo [[94mi[0m] - Collect Interest
-        echo.
     )
+    echo [[94mz[0m] - Check Private transaction results
+    echo.
 
     echo [[32mh[0m] - Help
     echo [[32mw[0m] - Visit website
@@ -166,7 +200,7 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     echo [[33mx[0m] - Exit WalletWorker
     echo [[31mX[0m] - Exit WalletWorker and stop all services
     echo.
-    choice /CS /C sak1234567hwxXi /N /M "Choose an option: "
+    choice /CS /C sak1234567hwxXiz /N /M "Choose an option: "
     SET choice=%ERRORLEVEL%
     if %choice% equ 1 goto startkomodod
     if %choice% equ 2 goto acmenu
@@ -183,6 +217,7 @@ rem @link https://stackoverflow.com/a/3002207/5016797
     if %choice% equ 13 goto end
     if %choice% equ 14 goto kill
     if %choice% equ 15 goto collectinterest
+    if %choice% equ 16 goto zresults
     goto end
 
 :collectinterest
@@ -226,7 +261,6 @@ rem @link https://stackoverflow.com/a/3002207/5016797
 
 :startkomodod
     start "[%walletlabel%] komodod.exe" bin\komodod -printtoconsole %kmdparamdatadir% %kmdparamacname% %kmdparamacsupply%
-
     echo.
     echo Starting komodod.exe for [%walletlabel%]
     echo.
@@ -419,6 +453,39 @@ rem @link https://stackoverflow.com/a/3002207/5016797
         pause
     )
     goto mainmenu
+
+:zresults
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_getoperationresult
+    pause
+    goto mainmenu
+
+:webworker
+    start "" https://webworker.sh/notary
+    goto mainmenu
+
+rem @link https://stackoverflow.com/a/5841587/5016797
+:strlen <stringVar> <resultVar> (   
+    set "s=!%~1!#"
+    set "len=0"
+    for %%P in (4096 2048 1024 512 256 128 64 32 16 8 4 2 1) do (
+        if "!s:~%%P,1!" NEQ "" ( 
+            set /a "len+=%%P"
+            set "s=!s:~%%P!"
+        )
+    )
+) (
+    set "%~2=%len%"
+    goto:eof
+)
+
+rem @link https://stackoverflow.com/a/3002207/5016797
+:trim <stringVar> (
+    set "s=!%~1!"
+    for /f "tokens=* delims= " %%a in ("%s%") do set input=%%a
+    for /l %%a in (1,1,100) do if "!input:~-1!"==" " set input=!input:~0,-1!
+    set "%~1=%input%"
+    goto:eof
+)
 
 :error
     echo There was a problem
