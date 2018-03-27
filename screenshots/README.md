@@ -18,13 +18,19 @@ You can select any Komodo asset chain and adding new ones are as easily done by 
 
 The komodod API provides a few different ways to view addresses in your wallet most of which are exposed here.
 
+## Create New Addresses
+
 ![WalletWorker Create Addresses](./createaddress.jpg)
 
 Quickly generate a new Transparent or Private address for your wallet!
 
+## Backup your wallet.dat files!
+
 ![WalletWorker Wallet Backup](./backup.jpg)
 
 Backup your wallet files to a few key locations on your system. The files will be automatically labeled and timestamped so keeping multiple backups is super simple.
+
+## Private Keys Functionality
 
 ![WalletWorker Private Keys Menu](./privkeys.jpg)
 
