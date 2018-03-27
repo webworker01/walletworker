@@ -30,6 +30,7 @@ I was able to complete the initial version in a little over 24 hours of total wo
 * Auto installs and updates from https://artifacts.supernet.org/latest/windows/
 * Auto sets up komodo.conf with randomly generated RPC username and password
 * If Agama was already installed, can share the same data directory and wallet.dat files
+* Output debug messages to console instead of debug.log file so you can see in realtime what komodod is up to
 * Configurable data directory - place your data onto a different drive if you wish!
 * Create new Transparent and Private addresses
 * Send Transparent and Private transactions
