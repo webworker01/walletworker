@@ -28,7 +28,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
         if defined datadir (
             set kmdkilldatadir=-datadir=%configdir%\%%a
         ) else (
-            set kmdkilldatadir=-datadir=%configdir%
+            set kmdkilldatadir=
         )
 
         if exist "%configdir%\%%a" (
@@ -37,13 +37,11 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     )
     rem kill em all
     rem taskkill /T /IM komodod.exe
-    pause
     goto end
 
 :killone
     echo Shutting down %walletlabel%...
     bin\komodo-cli %kmdparamdatadir% %kmdparamacname% stop
-    pause
     goto mainmenu
 
 :help
@@ -70,6 +68,8 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     goto mainmenu
 
 :startup
+    title=WalletWorker 0.0.1a for Komodo - https://webworker.sh/notary
+    mode con:cols=150 lines=40
     if exist "config.ini" (
         for /F "tokens=*" %%I in (config.ini) do set %%I
     ) else (
@@ -78,8 +78,6 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     goto setup
 
 :setup
-    title=WalletWorker 0.0.1a for Komodo - https://webworker.sh/notary
-    mode con:cols=150 lines=40
     call :checkdirs
     call :checkzcash
     call :checkkomodo
@@ -119,8 +117,14 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo.
     choice /N /M "Would you like to show komodod logs in the daemon windows? [Y/N] "
     SET loggingchoice=%ERRORLEVEL%
-    if %loggingchoice% equ 1 echo logtoscreen=yes>> config.ini
-    if %loggingchoice% equ 2 echo logtoscreen=no>> config.ini
+    if %loggingchoice% equ 1 (
+        echo logtoscreen=yes>> config.ini
+        set logtoscreen=yes
+    )
+    if %loggingchoice% equ 2 (
+        echo logtoscreen=no>> config.ini
+        set logtoscreen=no
+    )
     goto setup
 
 :checkdirs
@@ -154,7 +158,6 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
         echo rpcuser=user!randomone!>> %configdir%\komodo.conf
         call :genrandom randomtwo
         echo rpcpassword=!randomtwo!>> %configdir%\komodo.conf
-        pause
     )
     goto:eof
 
@@ -323,8 +326,11 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo A new window was opened for [%walletlabel%], you can minimize this or leave it up, 
     echo but do not close it if you wish to do anything with it.
     echo.
-    echo If you don't want to see all the log messages in that window you can change logtoscreen=no
-    echo or logtoscreen=yes if you want them in config.ini
+    if "%logtoscreen%" equ "yes" (
+        echo If you don't want to see all the log messages in that window you can change logtoscreen=no in config.ini
+    ) else (
+        echo If you want to see all the log messages in that window you can change logtoscreen=yes in config.ini
+    )
     echo.
     echo Before running any other commands the blockchain must be syncing
     echo Check in komodod.exe window for lines starting with "UpdateTip"
@@ -640,7 +646,6 @@ rem @link https://superuser.com/a/571136
         for /f %%c in ('echo %%alfanum:~!rnd_num!^,1%%') do set pwd=!pwd!%%c
     )
     set "%~1=%pwd%"
-    pause
     goto:eof
 )
 
