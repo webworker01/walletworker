@@ -17,21 +17,41 @@ rem @todo add self update for this file
 rem @todo reduce update to once daily
 rem @todo add check for update option
 rem @todo handle unable to check for updates
+rem @todo gracefully close just current AC that's selected
 
 goto startup
 
 REM bat files are finicky.. this is way up here so it doesn't accidently get run if a section below fails
 :kill
     echo Shutting down services...
-    bin\komodo-cli --datadir=%configdir% stop
+    bin\komodo-cli -datadir=%configdir% stop
     for /f "tokens=2" %%a in (acs.txt) do (
         if exist "%configdir%\%%a" (
-            bin\komodo-cli --datadir=%configdir%\%%a -ac_name=%%a stop
+            set kmdkilldatadir=
+            if defined datadir set kmdkilldatadir=-datadir=%configdir%\%%a
+            bin\komodo-cli %kmdkilldatadir% -ac_name=%%a stop
         )
     )
     rem kill em all
     rem taskkill /T /IM komodod.exe
     goto end
+
+:killone
+    echo Shutting down %walletlabel%...
+    if not defined chosenac (
+        bin\komodo-cli -datadir=%configdir% stop
+        pause
+        goto mainmenu
+    )
+
+    if defined datadir (
+        set kmdkilldatadir=-datadir=%configdir%\%walletlabel%
+    ) else (
+        set kmdkilldatadir=-datadir=%configdir%
+    )
+    bin\komodo-cli %kmdkilldatadir% -ac_name=%walletlabel% stop
+    pause
+    goto mainmenu
 
 :help
     call :menuheader
@@ -236,8 +256,9 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo.
     echo [[33mx[0m] - Exit WalletWorker
     echo [[31mX[0m] - Exit WalletWorker and stop all services
+    echo [[31mc[0m] - Stop komodod.exe for [%walletlabel%]
     echo.
-    choice /CS /C sak1234567hwxXizb /N /M "Choose an option: "
+    choice /CS /C sak1234567hwxXizbc /N /M "Choose an option: "
     SET choice=%ERRORLEVEL%
     if %choice% equ 1 goto startkomodod
     if %choice% equ 2 goto acmenu
@@ -256,6 +277,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     if %choice% equ 15 goto collectinterest
     if %choice% equ 16 goto zresults
     if %choice% equ 17 goto backupwallet
+    if %choice% equ 18 goto killone
     goto end
 
 :acmenu
@@ -299,7 +321,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 
     if defined chosenac (
         if not exist %configdir%\%chosenac% mkdir %configdir%\%chosenac%
-    ) 
+    )
 
     start "[%walletlabel%] komodod.exe" bin\komodod %printtoconsole% %kmdparamdatadir% %kmdparamacname% %kmdparamacsupply%
     echo.
