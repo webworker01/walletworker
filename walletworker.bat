@@ -7,7 +7,7 @@ rem @author webworker01 <https://webworker.sh>
 
 rem Inspired by DeckerSU's dexscripts.win32
 
-rem @todo even better shutdown handling
+rem @todo even better shutdown handling (save or detect state of currently running komodods)
 rem @todo better options/handling for daemon windows (e.g. option to not show daemon window at all)
 rem @todo get live list of assetchains
 rem @todo collect interest
@@ -17,7 +17,6 @@ rem @todo add self update for this file
 rem @todo reduce update to once daily
 rem @todo add check for update option
 rem @todo handle unable to check for updates
-rem @todo gracefully close just current AC that's selected
 
 goto startup
 
@@ -26,30 +25,24 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo Shutting down services...
     bin\komodo-cli -datadir=%configdir% stop
     for /f "tokens=2" %%a in (acs.txt) do (
+        if defined datadir (
+            set kmdkilldatadir=-datadir=%configdir%\%%a
+        ) else (
+            set kmdkilldatadir=-datadir=%configdir%
+        )
+
         if exist "%configdir%\%%a" (
-            set kmdkilldatadir=
-            if defined datadir set kmdkilldatadir=-datadir=%configdir%\%%a
-            bin\komodo-cli %kmdkilldatadir% -ac_name=%%a stop
+            bin\komodo-cli !kmdkilldatadir! -ac_name=%%a stop
         )
     )
     rem kill em all
     rem taskkill /T /IM komodod.exe
+    pause
     goto end
 
 :killone
     echo Shutting down %walletlabel%...
-    if not defined chosenac (
-        bin\komodo-cli -datadir=%configdir% stop
-        pause
-        goto mainmenu
-    )
-
-    if defined datadir (
-        set kmdkilldatadir=-datadir=%configdir%\%walletlabel%
-    ) else (
-        set kmdkilldatadir=-datadir=%configdir%
-    )
-    bin\komodo-cli %kmdkilldatadir% -ac_name=%walletlabel% stop
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% stop
     pause
     goto mainmenu
 
