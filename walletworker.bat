@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 rem *UNRELATED* https://github.com/firehol/netdata/wiki
 
-rem WalletWorker 0.0.1a for Komodo
+rem WalletWorker 0.0.2a for Komodo
 rem @author webworker01 <https://webworker.sh>
 
 rem Inspired by DeckerSU's dexscripts.win32
@@ -68,7 +68,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     goto mainmenu
 
 :startup
-    title=WalletWorker 0.0.1a for Komodo - https://webworker.sh/notary
+    title=WalletWorker 0.0.2a for Komodo - https://webworker.sh/notary
     mode con:cols=150 lines=40
     if exist "config.ini" (
         for /F "tokens=*" %%I in (config.ini) do set %%I
@@ -228,7 +228,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 :menuheader
     cls
     echo.
-    echo WalletWorker 0.0.1a - [32mhttps://webworker.sh/notary[0m
+    echo WalletWorker 0.0.2a - [32mhttps://webworker.sh/notary[0m
     echo ----------------------------------------
     echo.
     echo Currently on [[94m[43m%walletlabel%[0m] Chain in %configdir%
