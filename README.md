@@ -1,4 +1,4 @@
-# WalletWorker 0.0.1a for Komodo
+# WalletWorker 0.0.2a for Komodo
 
 By [webworker01](https://webworker.sh/notary)
 
@@ -26,6 +26,7 @@ I was able to complete the initial version in a little over 24 hours of total wo
 
 ## Features
 
+* **New in 0.0.2a** - Manual entry of any cli command
 * Handles Komodo and all assetchains
 * Auto installs and updates from https://artifacts.supernet.org/latest/windows/
 * Auto sets up komodo.conf with randomly generated RPC username and password
