@@ -195,6 +195,36 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     )
     goto:eof
 
+:startkomodod
+    if "%logtoscreen%" equ "yes" (
+        set printtoconsole=-printtoconsole
+    )
+
+    if defined chosenac (
+        if not exist %configdir%\%chosenac% mkdir %configdir%\%chosenac%
+    )
+
+    start "[%walletlabel%] komodod.exe" bin\komodod %printtoconsole% %kmdparamdatadir% %kmdparamacname% %kmdparamacsupply%
+    echo.
+    echo Starting komodod.exe for [%walletlabel%]
+    echo.
+    echo A new window was opened for [%walletlabel%], you can minimize this or leave it up, 
+    echo but do not close it if you wish to do anything with it.
+    echo.
+    if "%logtoscreen%" equ "yes" (
+        echo If you don't want to see all the log messages in that window you can change logtoscreen=no in config.ini
+    ) else (
+        echo If you want to see all the log messages in that window you can change logtoscreen=yes in config.ini
+    )
+    echo.
+    echo Before running any other commands the blockchain must be syncing
+    echo Check in komodod.exe window for lines starting with "UpdateTip"
+    echo.
+    echo Then choose Get Info and check that "blocks" = "longestchain" to verify fully synced
+    echo.
+    pause
+    goto mainmenu
+
 :menuheader
     cls
     echo.
@@ -238,6 +268,9 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo [[94m5[0m] - Send Funds
     echo [[94m6[0m] - New Address
     echo [[94m7[0m] - Private Keys Menu
+    REM echo [[94m8[0m] - Block Explorer Menu
+    echo.
+    echo [[94m0[0m] - Run manual command
     echo.
 
     echo [[94mb[0m] - Backup wallet.dat
@@ -254,7 +287,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo [[31mX[0m] - Exit WalletWorker and stop all services
     echo [[31mc[0m] - Stop komodod.exe for [%walletlabel%]
     echo.
-    choice /CS /C sak1234567hwxXizbc /N /M "Choose an option: "
+    choice /CS /C sak1234567hwxXizbc80 /N /M "Choose an option: "
     SET choice=%ERRORLEVEL%
     if %choice% equ 1 goto startkomodod
     if %choice% equ 2 goto acmenu
@@ -274,6 +307,8 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     if %choice% equ 16 goto zresults
     if %choice% equ 17 goto backupwallet
     if %choice% equ 18 goto killone
+    if %choice% equ 19 goto blockexplorermenu
+    if %choice% equ 20 goto manualrun
     goto end
 
 :acmenu
@@ -310,35 +345,24 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     )
     goto mainmenu
 
-:startkomodod
-    if "%logtoscreen%" equ "yes" (
-        set printtoconsole=-printtoconsole
-    )
+:blockexplorermenu
+    echo [[94m1[0m] - Block Scanner
+    echo.
+    echo [[33mx[0m] - Return to Main Menu
+    echo.
+    choice /C 123x /N /M "Choose a directory: "
+    SET choice=%ERRORLEVEL%
+    if %choice% equ 2 {
+        
+        bin\komodo-cli %kmdparamdatadir% %kmdparamacname% %exportmethod% %exportfilename%
 
-    if defined chosenac (
-        if not exist %configdir%\%chosenac% mkdir %configdir%\%chosenac%
-    )
-
-    start "[%walletlabel%] komodod.exe" bin\komodod %printtoconsole% %kmdparamdatadir% %kmdparamacname% %kmdparamacsupply%
-    echo.
-    echo Starting komodod.exe for [%walletlabel%]
-    echo.
-    echo A new window was opened for [%walletlabel%], you can minimize this or leave it up, 
-    echo but do not close it if you wish to do anything with it.
-    echo.
-    if "%logtoscreen%" equ "yes" (
-        echo If you don't want to see all the log messages in that window you can change logtoscreen=no in config.ini
-    ) else (
-        echo If you want to see all the log messages in that window you can change logtoscreen=yes in config.ini
-    )
-    echo.
-    echo Before running any other commands the blockchain must be syncing
-    echo Check in komodod.exe window for lines starting with "UpdateTip"
-    echo.
-    echo Then choose Get Info and check that "blocks" = "longestchain" to verify fully synced
-    echo.
+    }
+    
     pause
+
     goto mainmenu
+
+
 
 :collectinterest
     echo You found a hidden option, neat^^! But it's not implemented yet sorry.
@@ -613,6 +637,19 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
         )
         pause
     )
+    goto mainmenu
+
+:manualrun
+    echo.
+    echo Enter any command that you could use after komodo-cli. 
+    echo.
+    echo This will not be validated in any way, so double check what you are doing before proceeding!
+    echo.
+    echo https://support.supernet.org/support/solutions/articles/29000013922-komodo-platform-command-line-on-windows
+    echo.
+    set /P manualcommand=Your command: 
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% %manualcommand%
+    pause
     goto mainmenu
 
 :webworker
