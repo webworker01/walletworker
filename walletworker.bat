@@ -616,7 +616,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     )
 
     set /P thisamount=Enter the amount to send: 
-    echo %thisamount%|findstr /xr "[.]*[0-9][.]*[0-9]* 0" >nul && (
+    echo %thisamount%|findstr /xr "[0-9]*[.]*[0-9]*" >nul && (
         echo.
     ) || (
         echo %thisamount% is not a valid amount, please double check.
@@ -628,7 +628,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     if /I %verifiedsend% equ Y (
         echo sending...
         if %thistranstype% equ 1 (
-            bin\komodo-cli %kmdparamdatadir% %kmdparamacname% sendtoaddress "%thistoaddress%" %thisamount%
+            bin\komodo-cli %kmdparamdatadir% %kmdparamacname% sendtoaddress "%thistoaddress%" %thisamount% "" "" true
         )
 
         if %thistranstype% equ 2 (
