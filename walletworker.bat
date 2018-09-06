@@ -24,7 +24,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 :kill
     echo Shutting down services...
     bin\komodo-cli -datadir=%configdir% stop
-    for /f "tokens=2" %%a in (acs.txt) do (
+    for /f "tokens=1" %%a in (acs.txt) do (
         if defined datadir (
             set kmdkilldatadir=-datadir=%configdir%\%%a
         ) else (
