@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 rem *UNRELATED* https://github.com/firehol/netdata/wiki
 
-rem WalletWorker 0.0.3a for Komodo
+rem WalletWorker 0.1.0 for Komodo
 rem @author webworker01 <https://webworker.sh>
 
 rem Inspired by DeckerSU's dexscripts.win32
@@ -68,7 +68,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     goto mainmenu
 
 :startup
-    title=WalletWorker 0.0.3a for Komodo - https://webworker.sh/notary
+    title=WalletWorker 0.1.0 for Komodo - https://webworker.sh/notary
     mode con:cols=150 lines=40
     if exist "config.ini" (
         for /F "tokens=*" %%I in (config.ini) do set %%I
@@ -228,7 +228,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 :menuheader
     cls
     echo.
-    echo WalletWorker 0.0.3a - [32mhttps://webworker.sh/notary[0m
+    echo WalletWorker 0.1.0 - [32mhttps://webworker.sh/notary[0m
     echo ----------------------------------------
     echo.
     echo Currently on [[94m[43m%walletlabel%[0m] Chain in %configdir%
@@ -281,12 +281,13 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 
     echo [[32mh[0m] - Help
     echo [[32mw[0m] - My notary node proposal
+    echo [[32md[0m] - Donate to support my projects
     echo.
     echo [[33mx[0m] - Exit WalletWorker
     echo [[31mX[0m] - Exit WalletWorker and stop all services
     echo [[31mc[0m] - Stop komodod.exe for [%walletlabel%]
     echo.
-    choice /CS /C sak1234567hwxXizbc80 /N /M "Choose an option: "
+    choice /CS /C sak1234567hwxXizbc80d /N /M "Choose an option: "
     SET choice=%ERRORLEVEL%
     if %choice% equ 1 goto startkomodod
     if %choice% equ 2 goto acmenu
@@ -308,6 +309,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     if %choice% equ 18 goto killone
     if %choice% equ 19 goto blockexplorermenu
     if %choice% equ 20 goto manualrun
+    if %choice% equ 21 goto donate
     goto end
 
 :acmenu
@@ -688,6 +690,23 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 
 :webworker
     start "" https://webworker.sh/notary
+    goto mainmenu
+    
+:donate
+    echo Any donations go towards general development in the Komodo ecosystem.
+    echo.
+    echo Some projects I have been working on:
+    echo.
+    echo Komodostats.com  https://komodostats.com
+    echo Walletworker     https://github.com/webworker01/walletworker
+    echo knomp            https://github.com/webworker01/knomp
+    echo Pirate ZZNOMP    https://pirate.komodostats.com
+    echo.
+    echo.
+    echo Donate KMD: [32mRWEBo1Yp4uGkeXPi1ZGQARfLPkGmoW1MwY[0m
+    echo Donate BTC: [32m1WEBo1hf1BSnGJvfB3bhyKxPtJvgVWuzM[0m
+    echo.
+    pause
     goto mainmenu
 
 :zresults
