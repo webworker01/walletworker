@@ -81,10 +81,11 @@ Any donations go towards general development in the Komodo ecosystem.
 
 Some projects I have been working on:
 
-Komodostats.com  https://komodostats.com
-Walletworker     https://github.com/webworker01/walletworker
-knomp            https://github.com/webworker01/knomp
-Pirate ZZNOMP    https://pirate.komodostats.com
+* Komodostats.com  https://komodostats.com
+* Walletworker     https://github.com/webworker01/walletworker
+* knomp            https://github.com/webworker01/knomp
+* Pirate ZZNOMP    https://pirate.komodostats.com
 
 Donate KMD: RWEBo1Yp4uGkeXPi1ZGQARfLPkGmoW1MwY
+
 Donate BTC: 1WEBo1hf1BSnGJvfB3bhyKxPtJvgVWuzM
