@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 rem *UNRELATED* https://github.com/firehol/netdata/wiki
 
-rem WalletWorker 0.0.2a for Komodo
+rem WalletWorker 0.0.3a for Komodo
 rem @author webworker01 <https://webworker.sh>
 
 rem Inspired by DeckerSU's dexscripts.win32
@@ -68,7 +68,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     goto mainmenu
 
 :startup
-    title=WalletWorker 0.0.2a for Komodo - https://webworker.sh/notary
+    title=WalletWorker 0.0.3a for Komodo - https://webworker.sh/notary
     mode con:cols=150 lines=40
     if exist "config.ini" (
         for /F "tokens=*" %%I in (config.ini) do set %%I
@@ -162,7 +162,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     goto:eof
 
 :checkupdates
-    powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/', 'tmp\newpage.html')"
+    powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/komodo/windows/', 'tmp\newpage.html')"
     if not exist "tmp\newpage.html" (
         echo Error checking for updates 
         rem continue with existing version?
@@ -180,16 +180,16 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
         echo New updates were found for komodod. Please make sure any existing komodod.exe instances are fully closed before continuing.
         pause
         echo Updating, please wait...
-        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/komodo-cli.exe', 'bin\komodo-cli.exe')"
-        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/komodo-tx.exe', 'bin\komodo-tx.exe')"
-        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/komodod.exe', 'bin\komodod.exe')"
-        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/libcrypto-1_1.dll', 'bin\libcrypto-1_1.dll')"
-        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/libcurl-4.dll', 'bin\libcurl-4.dll')"
-        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/libcurl.dll', 'bin\libcurl.dll')"
-        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/libgcc_s_sjlj-1.dll', 'bin\libgcc_s_sjlj-1.dll')"
-        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/libnanomsg.dll', 'bin\libnanomsg.dll')"
-        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/libssl-1_1.dll', 'bin\libssl-1_1.dll')"
-        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/windows/libwinpthread-1.dll', 'bin\libwinpthread-1.dll')"
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/komodo/windows/komodo-cli.exe', 'bin\komodo-cli.exe')"
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/komodo/windows/komodo-tx.exe', 'bin\komodo-tx.exe')"
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/komodo/windows/komodod.exe', 'bin\komodod.exe')"
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/komodo/windows/libcrypto-1_1.dll', 'bin\libcrypto-1_1.dll')"
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/komodo/windows/libcurl-4.dll', 'bin\libcurl-4.dll')"
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/komodo/windows/libcurl.dll', 'bin\libcurl.dll')"
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/komodo/windows/libgcc_s_sjlj-1.dll', 'bin\libgcc_s_sjlj-1.dll')"
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/komodo/windows/libnanomsg.dll', 'bin\libnanomsg.dll')"
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/komodo/windows/libssl-1_1.dll', 'bin\libssl-1_1.dll')"
+        powershell -Command "(New-Object Net.WebClient).DownloadFile('https://artifacts.supernet.org/latest/komodo/windows/libwinpthread-1.dll', 'bin\libwinpthread-1.dll')"
     ) else (
         echo No updates, continuing
     )
@@ -204,7 +204,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
         if not exist %configdir%\%chosenac% mkdir %configdir%\%chosenac%
     )
 
-    start "[%walletlabel%] komodod.exe" bin\komodod %printtoconsole% %kmdparamdatadir% %kmdparamacname% %kmdparamacsupply%
+    start "[%walletlabel%] komodod.exe" bin\komodod %printtoconsole% %kmdparamdatadir% %kmdparamacname% %kmdparamsac%
     echo.
     echo Starting komodod.exe for [%walletlabel%]
     echo.
@@ -228,7 +228,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 :menuheader
     cls
     echo.
-    echo WalletWorker 0.0.2a - [32mhttps://webworker.sh/notary[0m
+    echo WalletWorker 0.0.3a - [32mhttps://webworker.sh/notary[0m
     echo ----------------------------------------
     echo.
     echo Currently on [[94m[43m%walletlabel%[0m] Chain in %configdir%
@@ -238,10 +238,9 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 :kmdswitch
     set chosenacid=
     set chosenac=
-    set chosenacsupply=
     set walletlabel=KMD
     set kmdparamacname=
-    set kmdparamacsupply=
+    set kmdparamsac=
     if defined datadir (
         set kmdparamdatadir=-datadir=%datadir% -exportdir=%datadir%
     ) else (
@@ -275,7 +274,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 
     echo [[94mb[0m] - Backup wallet.dat
     if not defined chosenac (
-        REM echo [[94mi[0m] - Collect Interest
+        echo [[94mi[0m] - Collect Interest
     )
     echo [[94mz[0m] - Check Private transaction results
     echo.
@@ -313,27 +312,33 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 
 :acmenu
     call:menuheader
+    set /a counter=1
     for /F "tokens=1,2" %%a in (acs.txt) do (
-        set thisacid=%%a
-        set thisacname=%%b
+        set thisacid=!counter!
+        set thisacname=%%a
         set firstletter=!thisacname:~0,1!
         echo [[32m!thisacid![0m] - !thisacname!
+        set /a counter=!counter!+1
     )
     echo.
     set /P chosenacid=Choose by [[32mid[0m] then press [Enter]: 
+
+    set /a chosenacid=%chosenacid%-1
     set foundmatch=
-    for /f "tokens=2,3" %%a in ('
-        findstr /b /r /i /c:"%chosenacid% " "acs.txt"
-    ') do (
+    set skip=
+    if %chosenacid% geq 1 set "skip=skip=%chosenacid%"
+    for /f "%skip% tokens=1,* usebackq" %%a in (acs.txt) do (
         set chosenac=%%a
-        set chosenacsupply=%%b
+        set chosenacparams=%%b
         set foundmatch=1
+        goto acchosen
     )
 
+:acchosen
     if defined foundmatch (
         set walletlabel=%chosenac%
         set kmdparamacname=-ac_name=%chosenac%
-        set kmdparamacsupply=-ac_supply=%chosenacsupply%
+        set kmdparamsac=%chosenacparams%
         if defined datadir (
             set kmdparamdatadir=-datadir=%configdir%\%chosenac% -exportdir=%configdir%
         ) else (
@@ -352,20 +357,41 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo.
     choice /C 123x /N /M "Choose a directory: "
     SET choice=%ERRORLEVEL%
-    if %choice% equ 2 {
-        
+    if %choice% equ 2 (
         bin\komodo-cli %kmdparamdatadir% %kmdparamacname% %exportmethod% %exportfilename%
-
-    }
+    )
     
     pause
 
     goto mainmenu
 
-
-
 :collectinterest
-    echo You found a hidden option, neat^^! But it's not implemented yet sorry.
+    for /f %%b in ('bin\komodo-cli !kmdparamdatadir! !kmdparamacname! getbalance') DO set collectbalance=%%b
+    
+    set interest=0
+    for /f "tokens=1,2" %%i in ('bin\komodo-cli !kmdparamdatadir! !kmdparamacname! getinfo') DO (
+        if %%i equ "interest": (
+            set interest=%%j
+        )
+    )
+
+    echo You have %interest:~0,-1% in interest. We can collect it by sending your balance to an address you specify.
+    set /P thistoaddress=Enter the address you wish to send %collectbalance% to: 
+
+    call :trim thistoaddress
+    call :strlen thistoaddress thistoaddresslen
+
+    if %thistoaddresslen% equ 0 (
+        echo No to address entered.
+        pause
+        goto mainmenu
+    )
+
+    set /P verifiedsend=Are you sure you to collect %interest:~0,-1% interest and send %collectbalance% to %thistoaddress%? [Y/N]: 
+    if /I %verifiedsend% equ Y (
+        bin\komodo-cli %kmdparamdatadir% %kmdparamacname% sendtoaddress %thistoaddress% %collectbalance% "collect interest" "" true
+    )
+
     pause
     goto mainmenu
 
@@ -402,7 +428,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     goto mainmenu
 
 :getbalance
-    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% getbalance
+    bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_gettotalbalance
     pause
     goto mainmenu
 
@@ -633,7 +659,7 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
 
         if %thistranstype% equ 2 (
             bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_sendmany "%thisfromaddress%" "[{\"address\": \"%thistoaddress%\", \"amount\": %thisamount%}]"
-            bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_getoperationresult
+            bin\komodo-cli %kmdparamdatadir% %kmdparamacname% z_getoperationstatus
         )
         pause
     )
@@ -643,11 +669,19 @@ REM bat files are finicky.. this is way up here so it doesn't accidently get run
     echo.
     echo Enter any command that you could use after komodo-cli. 
     echo.
-    echo This will not be validated in any way, so double check what you are doing before proceeding!
+    echo [31mWarning^^![0m This will not be validated in any way, so double check what you are doing before proceeding!
     echo.
-    echo https://support.supernet.org/support/solutions/articles/29000013922-komodo-platform-command-line-on-windows
+    echo https://docs.komodoplatform.com/komodo/komodo-API.html
     echo.
     set /P manualcommand=Your command: 
+    
+    call :trim manualcommand
+    call :strlen manualcommand manualcommandlen
+    if %manualcommandlen% equ 0 (
+        echo No command entered
+        pause
+        goto mainmenu
+    )
     bin\komodo-cli %kmdparamdatadir% %kmdparamacname% %manualcommand%
     pause
     goto mainmenu
