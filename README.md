@@ -1,8 +1,6 @@
-# WalletWorker 0.0.2a for Komodo
+# WalletWorker 0.1.0 for Komodo
 
 By [webworker01](https://webworker.sh/notary)
-
-Please vote for me in the notary node elections by sending VOTE2018 to **RPyD36pL25mRh4uNR2AaEHfoUjVHYDUbVe**
 
 ## What is this?
 
@@ -26,7 +24,8 @@ I was able to complete the initial version in a little over 24 hours of total wo
 
 ## Features
 
-* **New in 0.0.2a** - Manual entry of any cli command
+* **New in 0.1.0** - Collect interest for KMD
+* Manual entry of any cli command
 * Handles Komodo and all assetchains
 * Auto installs and updates from https://artifacts.supernet.org/latest/windows/
 * Auto sets up komodo.conf with randomly generated RPC username and password
@@ -74,6 +73,20 @@ I need to make sure everything is solid with the current features before adding 
 
 ## Get in Touch
 
-If you have any questions or comments, please feel free to reach out to me on the Komodo Slack or Telegram @webworker01
+If you have any questions or comments, please feel free to reach out to me on the Komodo Discord or Telegram @webworker01
 
 Please consider me during your voting for the Komodo Notary Node elections, this is just a small sample of what I can contribute to the community :)
+
+## Donate
+
+Any donations go towards general development in the Komodo ecosystem.
+
+Some projects I have been working on:
+
+Komodostats.com  https://komodostats.com
+Walletworker     https://github.com/webworker01/walletworker
+knomp            https://github.com/webworker01/knomp
+Pirate ZZNOMP    https://pirate.komodostats.com
+
+Donate KMD: RWEBo1Yp4uGkeXPi1ZGQARfLPkGmoW1MwY
+Donate BTC: 1WEBo1hf1BSnGJvfB3bhyKxPtJvgVWuzM
