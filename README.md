@@ -75,8 +75,6 @@ I need to make sure everything is solid with the current features before adding 
 
 If you have any questions or comments, please feel free to reach out to me on the Komodo Discord or Telegram @webworker01
 
-Please consider me during your voting for the Komodo Notary Node elections, this is just a small sample of what I can contribute to the community :)
-
 ## Donate
 
 Any donations go towards general development in the Komodo ecosystem.
