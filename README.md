@@ -25,9 +25,8 @@ I was able to complete the initial version in a little over 24 hours of total wo
 ## Features
 
 * **New in 0.1.0** - Collect interest for KMD
-* Manual entry of any cli command
 * Handles Komodo and all assetchains
-* Auto installs and updates from https://artifacts.supernet.org/latest/windows/
+* Auto installs and updates from https://artifacts.supernet.org/latest/komodo/windows/
 * Auto sets up komodo.conf with randomly generated RPC username and password
 * If Agama was already installed, can share the same data directory and wallet.dat files
 * Output debug messages to console instead of debug.log file so you can see in realtime what komodod is up to
@@ -38,6 +37,7 @@ I was able to complete the initial version in a little over 24 hours of total wo
 * Import/export private keys
 * Check addresses in your wallet in multiple ways
 * Graceful shutdown of daemons to help prevent corruption
+* Manual entry of any cli command
 * Feel like a hacker using this futuristic text based interface with colors
 
 ## How do I install this?
