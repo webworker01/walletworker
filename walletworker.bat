@@ -10,7 +10,6 @@ rem Inspired by DeckerSU's dexscripts.win32
 rem @todo even better shutdown handling (save or detect state of currently running komodods)
 rem @todo better options/handling for daemon windows (e.g. option to not show daemon window at all)
 rem @todo get live list of assetchains
-rem @todo collect interest
 rem @todo encrypt/decrypt wallet.dat with passphrase (verify/write up some msgs about incompatibility with agama)
 rem @todo add learning mode
 rem @todo add self update for this file
