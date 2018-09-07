@@ -1,4 +1,4 @@
-# WalletWorker 0.1.0 for Komodo
+# WalletWorker 0.1.1 for Komodo
 
 By [webworker01](https://webworker.sh/notary)
 
